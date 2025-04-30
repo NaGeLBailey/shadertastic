@@ -197,8 +197,7 @@ static void show_settings_dialog() {
     formLayout->addRow(layout);
 
     formLayout->addRow(new QLabel(
-        "Place your own effects in this folder to load them.\n"
-        "Two subfolders will be created: 'filters' and 'transitions', one for each type of effect."
+        "Place your own effects in this folder to load them."
     ));
     QLabel *effectsLabelDescription = new QLabel(
         "You can find more effects in the <a href=\"https://shadertastic.com/library\">Shadertastic library</a>"
@@ -226,6 +225,11 @@ static void show_settings_dialog() {
             "WARNING: this has a great impact on stability and performance.\n"
             "Enable this if you are creating your own effects and allow to hot-reload them."
         ));
+        QLabel *effectsLabelDescription2 = new QLabel(
+            "Create your own effects: <a href=\"https://doc.shadertastic.com/effect-development/getting-started/\">Documentation</a> (WORK IN PROGRESS)"
+        );
+        effectsLabelDescription2->setOpenExternalLinks(true);
+        formLayout->addRow(effectsLabelDescription2);
     }
 
     // Separator
