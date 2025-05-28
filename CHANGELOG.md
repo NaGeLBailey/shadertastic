@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.1.4] - 2025-05-28
+### Added
+- Transition Settings: copy/paste config buttons
+
 ## [0.1.3] - 2025-04-30
 ### Changed
 - Settings: Rewritten texts for better clarity
