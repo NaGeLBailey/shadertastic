@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#include <QClipboard>
+#include <QMessageBox>
+
 obs_properties_t *shadertastic_transition_properties(void *data);
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -276,6 +279,43 @@ bool shadertastic_transition_properties_change_effect_callback(void *priv, obs_p
     return true;
 }
 
+bool shadertastic_transition_export_button_click(obs_properties_t *props, obs_property_t *property, void *data) {
+    UNUSED_PARAMETER(props);
+    UNUSED_PARAMETER(property);
+    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    auto *settings = obs_source_get_settings(s->source);
+
+    QClipboard *clipboard = QApplication::clipboard();
+    clipboard->setText(obs_data_get_json(settings), QClipboard::Clipboard);
+    QMessageBox::information(nullptr, obs_module_text("TransitionExport"), obs_module_text("TransitionExportConfirm"));
+
+    obs_data_release(settings);
+    return true;
+}
+
+bool shadertastic_transition_import_button_click(obs_properties_t *props, obs_property_t *property, void *data) {
+    UNUSED_PARAMETER(props);
+    UNUSED_PARAMETER(property);
+    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    auto *settings = obs_source_get_settings(s->source);
+
+    QClipboard *clipboard = QApplication::clipboard();
+    auto new_data = obs_data_create_from_json(clipboard->text().toStdString().c_str());
+
+    if (!new_data) {
+        QMessageBox::information(nullptr, obs_module_text("TransitionImport"), obs_module_text("TransitionImportError"));
+        return false;
+    }
+
+    obs_source_update(s->source, obs_data_get_defaults(settings));
+    obs_source_update(s->source, new_data);
+    QMessageBox::information(nullptr, obs_module_text("TransitionImport"), obs_module_text("TransitionImportConfirm"));
+
+    obs_data_release(settings);
+    obs_data_release(new_data);
+    return true;
+}
+
 obs_properties_t *shadertastic_transition_properties(void *data) {
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
     obs_properties_t *props = obs_properties_create();
@@ -320,6 +360,12 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
     }
 
     about_property(props);
+
+    // Import/Export preferences
+    if (shadertastic_settings().dev_mode_enabled) {
+        obs_properties_add_button(props, "export_btn", obs_module_text("TransitionExport"), shadertastic_transition_export_button_click);
+        obs_properties_add_button(props, "import_btn", obs_module_text("TransitionImport"), shadertastic_transition_import_button_click);
+    }
 
     return props;
 }
