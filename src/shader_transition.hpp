@@ -362,10 +362,8 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
     about_property(props);
 
     // Import/Export preferences
-    if (shadertastic_settings().dev_mode_enabled) {
-        obs_properties_add_button(props, "export_btn", obs_module_text("TransitionExport"), shadertastic_transition_export_button_click);
-        obs_properties_add_button(props, "import_btn", obs_module_text("TransitionImport"), shadertastic_transition_import_button_click);
-    }
+    obs_properties_add_button(props, "export_btn", obs_module_text("TransitionExport"), shadertastic_transition_export_button_click);
+    obs_properties_add_button(props, "import_btn", obs_module_text("TransitionImport"), shadertastic_transition_import_button_click);
 
     return props;
 }
