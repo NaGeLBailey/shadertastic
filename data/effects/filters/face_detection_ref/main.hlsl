@@ -54,15 +54,6 @@ VertData VSDefault(VertData v_in)
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-float rand2(float2 co){
-	float v = sin(dot(co, float2(12.9898, 78.233))) * 43758.5453;
-	return fract(v);
-}
-float rand(float a, float b) {
-	return rand2(float2(a, b));
-}
-//----------------------------------------------------------------------------------------------------------------------
-
 float4 EffectLinear(float2 uv)
 {
     if (show_tex && uv.y < 0.05) {
