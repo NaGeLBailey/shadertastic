@@ -21,6 +21,19 @@
 obs_properties_t *shadertastic_transition_properties(void *data);
 //----------------------------------------------------------------------------------------------------------------------
 
+static shadertastic_transition shadertastic_no_transition;
+
+static inline shadertastic_transition* shadertastic_transition_cast(void *data) {
+    if (data == nullptr) {
+        if (shadertastic_no_transition.effects == nullptr) {
+            shadertastic_no_transition.effects = new shadertastic_effects_map_t();
+        }
+        return &shadertastic_no_transition;
+    }
+    return static_cast<shadertastic_transition*>(data);
+}
+//----------------------------------------------------------------------------------------------------------------------
+
 static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *source) {
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(bzalloc(sizeof(struct shadertastic_transition)));
     s->source = source;
@@ -75,13 +88,13 @@ static inline float calc_fade(float t, float mul) {
 //----------------------------------------------------------------------------------------------------------------------
 
 static float mix_a_fade_in_out(void *data, float t) {
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
     return 1.0f - calc_fade(t, s->transition_a_mul);
 }
 //----------------------------------------------------------------------------------------------------------------------
 
 static float mix_b_fade_in_out(void *data, float t) {
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
     return 1.0f - calc_fade(1.0f - t, s->transition_b_mul);
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -99,7 +112,7 @@ static float mix_b_cross_fade(void *data, float t) {
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_transition_update(void *data, obs_data_t *settings) {
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
     //debug("Update : %s", obs_data_get_json(settings));
 
     s->auto_reload = obs_data_get_bool(settings, "auto_reload");
@@ -140,13 +153,13 @@ void shadertastic_transition_render_init(void *data, gs_texture_t *a, gs_texture
     UNUSED_PARAMETER(b);
     UNUSED_PARAMETER(cx);
     UNUSED_PARAMETER(cy);
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
     s->transition_texrender_buffer = 0;
 }
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy) {
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
 
     const bool previous = gs_framebuffer_srgb_enabled();
     gs_enable_framebuffer_srgb(true);
@@ -197,7 +210,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
 
 void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
     UNUSED_PARAMETER(effect);
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
 
     if (s->transition_started) {
         obs_source_t *scene_a = obs_transition_get_source(s->source, OBS_TRANSITION_SOURCE_A);
@@ -238,7 +251,7 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
 //----------------------------------------------------------------------------------------------------------------------
 
 static bool shadertastic_transition_audio_render(void *data, uint64_t *ts_out, struct obs_source_audio_mix *audio, uint32_t mixers, size_t channels, size_t sample_rate) {
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
     if (!s) {
         return false;
     }
@@ -262,7 +275,7 @@ bool shadertastic_transition_properties_change_effect_callback(void *priv, obs_p
     UNUSED_PARAMETER(priv);
     UNUSED_PARAMETER(p);
     UNUSED_PARAMETER(data);
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(priv);
+    struct shadertastic_transition *s = shadertastic_transition_cast(priv);
 
     if (s->selected_effect != nullptr) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), false);
@@ -282,7 +295,7 @@ bool shadertastic_transition_properties_change_effect_callback(void *priv, obs_p
 bool shadertastic_transition_export_button_click(obs_properties_t *props, obs_property_t *property, void *data) {
     UNUSED_PARAMETER(props);
     UNUSED_PARAMETER(property);
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
     auto *settings = obs_source_get_settings(s->source);
 
     QClipboard *clipboard = QApplication::clipboard();
@@ -296,7 +309,7 @@ bool shadertastic_transition_export_button_click(obs_properties_t *props, obs_pr
 bool shadertastic_transition_import_button_click(obs_properties_t *props, obs_property_t *property, void *data) {
     UNUSED_PARAMETER(props);
     UNUSED_PARAMETER(property);
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
     auto *settings = obs_source_get_settings(s->source);
 
     QClipboard *clipboard = QApplication::clipboard();
@@ -317,7 +330,7 @@ bool shadertastic_transition_import_button_click(obs_properties_t *props, obs_pr
 }
 
 obs_properties_t *shadertastic_transition_properties(void *data) {
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
     obs_properties_t *props = obs_properties_create();
 
     obs_property_t *p;
@@ -377,7 +390,7 @@ void shadertastic_transition_defaults(void *data, obs_data_t *settings) {
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_transition_start(void *data) {
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
     s->rand_seed = (float)((double)rand() / (double)RAND_MAX);
     //debug("rand_seed = %f", s->rand_seed);
 
@@ -391,7 +404,7 @@ void shadertastic_transition_start(void *data) {
 
 void shadertastic_transition_stop(void *data) {
     debug("STOP");
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
     if (s->transitioning) {
         s->transitioning = false;
     }
@@ -402,7 +415,7 @@ static enum gs_color_space shadertastic_transition_get_color_space(void *data, s
     UNUSED_PARAMETER(count);
     UNUSED_PARAMETER(preferred_spaces);
 
-    struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
     return obs_transition_video_get_color_space(s->source);
 }
 //----------------------------------------------------------------------------------------------------------------------

@@ -365,16 +365,10 @@ static void show_settings_dialog() {
     apply_settings(settings);
     obs_data_release(settings);
 
-    struct obs_source_info shadertastic_transition_info = {};
-    shadertastic_transition_info.id =
-        #ifdef DEV_MODE
-          "shadertastic_transition_dev";
-        #else
-          "shadertastic_transition";
-        #endif
-
     shaders_library.load();
 
+    struct obs_source_info shadertastic_transition_info = {};
+    shadertastic_transition_info.id = "shadertastic_transition";
     shadertastic_transition_info.type = OBS_SOURCE_TYPE_TRANSITION;
     shadertastic_transition_info.get_name = shadertastic_transition_get_name;
     shadertastic_transition_info.create = shadertastic_transition_create;

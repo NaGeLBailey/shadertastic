@@ -18,6 +18,19 @@
 obs_properties_t *shadertastic_filter_properties(void *data);
 //----------------------------------------------------------------------------------------------------------------------
 
+static shadertastic_filter shadertastic_no_filter;
+
+static inline shadertastic_filter* shadertastic_filter_cast(void *data) {
+    if (data == nullptr) {
+        if (shadertastic_no_filter.effects == nullptr) {
+            shadertastic_no_filter.effects = new shadertastic_effects_map_t();
+        }
+        return &shadertastic_no_filter;
+    }
+    return static_cast<shadertastic_filter*>(data);
+}
+//----------------------------------------------------------------------------------------------------------------------
+
 static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *source) {
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(bzalloc(sizeof(struct shadertastic_filter)));
     s->source = source;
@@ -81,18 +94,18 @@ void shadertastic_filter_destroy(void *data) {
 //----------------------------------------------------------------------------------------------------------------------
 
 uint32_t shadertastic_filter_getwidth(void *data) {
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    struct shadertastic_filter *s = shadertastic_filter_cast(data);
     return s->width;
 }
 
 uint32_t shadertastic_filter_getheight(void *data) {
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    struct shadertastic_filter *s = shadertastic_filter_cast(data);
     return s->height;
 }
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_filter_update(void *data, obs_data_t *settings) {
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    struct shadertastic_filter *s = shadertastic_filter_cast(data);
     //debug("Update : %s", obs_data_get_json(settings));
 
     if (s->should_reload) {
@@ -124,7 +137,7 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
 //----------------------------------------------------------------------------------------------------------------------
 
 static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    struct shadertastic_filter *s = shadertastic_filter_cast(data);
     obs_source_t *target = obs_filter_get_target(s->source);
     s->deltatime = deltatime_seconds;
 
@@ -153,7 +166,7 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
 void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     //debug("-----------------------------------------");
     UNUSED_PARAMETER(effect);
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    struct shadertastic_filter *s = shadertastic_filter_cast(data);
     float filter_time = (float)s->time;
 
     const enum gs_color_space preferred_spaces[] = {
@@ -229,7 +242,7 @@ bool shadertastic_filter_properties_change_effect_callback(void *priv, obs_prope
     UNUSED_PARAMETER(priv);
     UNUSED_PARAMETER(p);
     UNUSED_PARAMETER(data);
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(priv);
+    struct shadertastic_filter *s = shadertastic_filter_cast(priv);
 
     if (s->selected_effect != nullptr) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), false);
@@ -252,7 +265,7 @@ bool shadertastic_filter_properties_change_effect_callback(void *priv, obs_prope
 bool shadertastic_filter_reload_button_click(obs_properties_t *props, obs_property_t *property, void *data) {
     UNUSED_PARAMETER(props);
     UNUSED_PARAMETER(property);
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    struct shadertastic_filter *s = shadertastic_filter_cast(data);
 
     if (s->selected_effect != nullptr) {
         s->selected_effect->reload();
@@ -264,7 +277,7 @@ bool shadertastic_filter_reload_button_click(obs_properties_t *props, obs_proper
 }
 
 obs_properties_t *shadertastic_filter_properties(void *data) {
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    struct shadertastic_filter *s = shadertastic_filter_cast(data);
     obs_properties_t *props = obs_properties_create();
 
     obs_property_t *p;
@@ -321,7 +334,7 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
 //----------------------------------------------------------------------------------------------------------------------
 
 static enum gs_color_space shadertastic_filter_get_color_space(void *data, size_t count, const enum gs_color_space *preferred_spaces) {
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    struct shadertastic_filter *s = shadertastic_filter_cast(data);
     const enum gs_color_space source_space = obs_source_get_color_space(
         obs_filter_get_target(s->source),
         count, preferred_spaces);
@@ -331,7 +344,7 @@ static enum gs_color_space shadertastic_filter_get_color_space(void *data, size_
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_filter_show(void *data) {
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    struct shadertastic_filter *s = shadertastic_filter_cast(data);
     shadertastic_effect_t *selected_effect = s->selected_effect;
     if (selected_effect != nullptr) {
         selected_effect->show();
@@ -340,7 +353,7 @@ void shadertastic_filter_show(void *data) {
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_filter_hide(void *data) {
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    struct shadertastic_filter *s = shadertastic_filter_cast(data);
     shadertastic_effect_t *selected_effect = s->selected_effect;
     if (selected_effect != nullptr) {
         selected_effect->hide();

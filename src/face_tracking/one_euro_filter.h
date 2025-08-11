@@ -89,7 +89,7 @@ public:
      * @param beta_ Parameter to reduce latency (> 0).
      * @param dcutoff Used to filter the derivates. 1 Hz by default. Change this parameter if you know what you are doing.
      */
-    explicit OneEuroFilter(float freq, float mincutoff = 1.0, float beta_ = 0.0, float dcutoff = 1.0);
+    explicit OneEuroFilter(float freq = 30.0, float mincutoff = 1.0, float beta_ = 0.0, float dcutoff = 1.0);
 
     /**
      * @brief Filter the noisy signal

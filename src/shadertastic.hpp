@@ -88,11 +88,7 @@ struct shadertastic_filter : public shadertastic_common {
 const char *shadertastic_transition_get_name(void *type_data)
 {
     UNUSED_PARAMETER(type_data);
-    #ifdef DEV_MODE
-        return "ShadertasticDev";
-    #else
-        return obs_module_text("TransitionName");
-    #endif
+    return obs_module_text("TransitionName");
 }
 const char *shadertastic_filter_get_name(void *type_data) {
     UNUSED_PARAMETER(type_data);
