@@ -372,11 +372,11 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), true);
     }
 
-    about_property(props);
-
     // Import/Export preferences
     obs_properties_add_button(props, "export_btn", obs_module_text("TransitionExport"), shadertastic_transition_export_button_click);
     obs_properties_add_button(props, "import_btn", obs_module_text("TransitionImport"), shadertastic_transition_import_button_click);
+
+    about_property(props);
 
     return props;
 }
