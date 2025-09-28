@@ -124,11 +124,7 @@ void about_property(obs_properties_t *props) {
 //----------------------------------------------------------------------------------------------------------------------
 
 MODULE_EXPORT [[maybe_unused]] const char *obs_module_name(void) {
-    #ifdef DEV_MODE
-        return "Shader Transitions (dev)";
-    #else
-        return obs_module_text("ModuleName");
-    #endif
+    return obs_module_text("ModuleName");
 }
 //----------------------------------------------------------------------------------------------------------------------
 
