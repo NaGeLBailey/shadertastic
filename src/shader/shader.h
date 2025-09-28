@@ -27,6 +27,7 @@ class effect_shader {
     gs_eparam_t *param_tex_b = nullptr;
     gs_eparam_t *param_tex_interm = nullptr;
     gs_eparam_t *param_time = nullptr;
+    gs_eparam_t *param_delta_time = nullptr;
     gs_eparam_t *param_upixel = nullptr;
     gs_eparam_t *param_vpixel = nullptr;
     gs_eparam_t *param_rand_seed = nullptr;

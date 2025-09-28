@@ -137,9 +137,9 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
 //----------------------------------------------------------------------------------------------------------------------
 
 static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
+    UNUSED_PARAMETER(deltatime_seconds);
     struct shadertastic_filter *s = shadertastic_filter_cast(data);
     obs_source_t *target = obs_filter_get_target(s->source);
-    s->deltatime = deltatime_seconds;
 
     s->width = obs_source_get_base_width(target);
     s->height = obs_source_get_base_height(target);
@@ -168,6 +168,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     UNUSED_PARAMETER(effect);
     struct shadertastic_filter *s = shadertastic_filter_cast(data);
     float filter_time = (float)s->time;
+    s->delta_time = filter_time - s->prev_time;
 
     const enum gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
@@ -185,10 +186,10 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     shadertastic_effect_t *selected_effect = s->selected_effect;
     if (selected_effect != nullptr && selected_effect->main_shader != nullptr) {
         if (selected_effect->input_facedetection && s->face_tracking.created) {
-            face_tracking_tick(&s->face_tracking, target_source, s->deltatime);
+            face_tracking_tick(&s->face_tracking, target_source, s->delta_time);
         }
         gs_texture_t *interm_texture = s->transparent_texture;
-        if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_ALLOW_DIRECT_RENDERING)) {
+        if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
             gs_blend_state_push();
             gs_blend_function_separate(
                 GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
@@ -213,12 +214,19 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                         gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
                     }
                 }
+                if (texrender_ok && selected_effect->prev_frames_to_keep[current_step]) {
+                    texrender_ok = selected_effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space);
+                }
 
                 if (texrender_ok) {
-                    selected_effect->set_params(nullptr, nullptr, filter_time, cx, cy, s->rand_seed);
+                    selected_effect->set_params(nullptr, nullptr, filter_time, s->delta_time, cx, cy, s->rand_seed);
                     selected_effect->set_step_params(current_step, interm_texture);
 
                     selected_effect->main_shader->render(s->source, cx, cy);
+
+                    if (selected_effect->prev_frames_to_keep[current_step]) {
+                        selected_effect->prev_frames_to_keep[current_step]->detach(s->source, cx, cy, false);
+                    }
                     if (is_interm_step) {
                         gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
                         interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
@@ -235,6 +243,8 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
         //debug("%s : No effect selected", obs_source_get_name(s->source));
         obs_source_skip_video_filter(s->source);
     }
+
+    s->prev_time = filter_time;
 }
 //----------------------------------------------------------------------------------------------------------------------
 

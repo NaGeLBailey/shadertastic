@@ -61,6 +61,8 @@ void shadertastic_effect_t::load() {
 
         obs_data_set_default_bool(metadata, "input_time", false);
         input_time = obs_data_get_bool(metadata, "input_time");
+
+        obs_data_set_default_bool(metadata, "input_facedetection", false);
         input_facedetection = obs_data_get_bool(metadata, "input_facedetection");
 
         obs_data_array_t *parameters = obs_data_get_array(metadata, "parameters");
@@ -73,13 +75,34 @@ void shadertastic_effect_t::load() {
         params_list previous_effect_params(effect_params);
         effect_params.clear();
 
-        for (size_t i=0; i < obs_data_array_count(parameters); i++) {
+        size_t nb_parameters = obs_data_array_count(parameters);
+        prev_frames_to_keep.resize(nb_steps);
+        std::fill(prev_frames_to_keep.begin(), prev_frames_to_keep.end(), nullptr);
+
+        for (size_t i=0; i < nb_parameters; i++) {
             obs_data_t *param_metadata = obs_data_array_item(parameters, i);
             const char *param_name = obs_data_get_string(param_metadata, "name");
             gs_eparam_t *shader_param = main_shader->get_param_by_name(param_name);
             effect_parameter *effect_param = parameter_factory.create(name, this->path, shader_param, param_metadata);
 
             if (effect_param != nullptr) {
+                if (effect_param->type() == PARAM_DATATYPE_PREV_FRAME) {
+                    effect_parameter_prev_frame *effect_param_prev_frame = dynamic_cast<effect_parameter_prev_frame *>(effect_param);
+
+                    int step_to_keep = effect_param_prev_frame->step();
+                    if (step_to_keep >= nb_steps) {
+                        log_error("Trying to use a prev frame on a step higher than the maximum steps : %s\n", name.c_str());
+                    }
+                    else {
+                        if (step_to_keep < 0) {
+                            step_to_keep = nb_steps - 1;
+                        }
+                        else if (step_to_keep >= nb_steps) {
+                            log_error("Trying to use a prev frame on a step higher than the maximum steps : %s\n", name.c_str());
+                        }
+                        prev_frames_to_keep[step_to_keep] = effect_param_prev_frame;
+                    }
+                }
                 std::string param_name_str = std::string(param_name);
                 effect_parameter *previous_param = previous_effect_params.get(param_name_str);
                 if (previous_param != nullptr) {
@@ -112,7 +135,7 @@ void shadertastic_effect_t::reload() {
     load();
 }
 
-void shadertastic_effect_t::set_params(gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy, float rand_seed) {
+void shadertastic_effect_t::set_params(gs_texture_t *a, gs_texture_t *b, float t, float delta_t, uint32_t cx, uint32_t cy, float rand_seed) {
     /* texture setters look reversed, but they aren't */
     if (gs_get_color_space() == GS_CS_SRGB) {
         /* users want nonlinear effect */
@@ -127,6 +150,7 @@ void shadertastic_effect_t::set_params(gs_texture_t *a, gs_texture_t *b, float t
     //debug("input textures set");
 
     try_gs_effect_set_float("time", main_shader->param_time, t);
+    try_gs_effect_set_float("delta_time", main_shader->param_delta_time, delta_t);
     try_gs_effect_set_float("upixel", main_shader->param_upixel, (float)(1.0/cx));
     try_gs_effect_set_float("vpixel", main_shader->param_vpixel, (float)(1.0/cy));
     try_gs_effect_set_float("rand_seed", main_shader->param_rand_seed, rand_seed);
@@ -151,9 +175,13 @@ void shadertastic_effect_t::set_step_params(int current_step, gs_texture_t *inte
     try_gs_effect_set_int("current_step", main_shader->param_current_step, current_step);
 }
 
-void shadertastic_effect_t::render_shader(uint32_t cx, uint32_t cy) const {
+
+void shadertastic_effect_t::render_shader(uint32_t cx, uint32_t cy, bool use_linear) const {
     const char *tech_name = "Draw";
-    if (gs_get_color_space() == GS_CS_SRGB) {
+    if (use_linear) {
+        tech_name = "DrawLinear";
+    }
+    else if (gs_get_color_space() == GS_CS_SRGB) {
         /* users want nonlinear fade */
     }
     else {

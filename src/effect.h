@@ -19,9 +19,12 @@
 #define SHADERTASTIC_EFFECT_HPP
 
 #include <memory>
+#include <vector>
+#include <set>
 
 #include "params_list.hpp"
 #include "shader/shader.h"
+#include "parameters/parameter_prev_frame.hpp"
 
 struct shadertastic_effect_t {
     const std::string path;
@@ -30,6 +33,8 @@ struct shadertastic_effect_t {
     int nb_steps{};
     bool input_time = false;
     bool input_facedetection = false;
+    std::vector<effect_parameter_prev_frame *> prev_frames_to_keep{};
+
     params_list effect_params;
     std::shared_ptr<effect_shader> main_shader = nullptr;
 
@@ -39,11 +44,11 @@ struct shadertastic_effect_t {
 
     void reload();
 
-    void set_params(gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy, float rand_seed);
+    void set_params(gs_texture_t *a, gs_texture_t *b, float t, float delta_t, uint32_t cx, uint32_t cy, float rand_seed);
 
     void set_step_params(int current_step, gs_texture_t *interm) const;
 
-    void render_shader(uint32_t cx, uint32_t cy) const;
+    void render_shader(uint32_t cx, uint32_t cy, bool is_linear) const;
 
     void show();
 
