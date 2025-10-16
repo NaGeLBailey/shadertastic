@@ -1,4 +1,8 @@
 {
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io"
+  },
   "label": "Vignette",
   "revision": 1,
   "steps": 1,

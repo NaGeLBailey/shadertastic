@@ -1,7 +1,11 @@
 {
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io"
+  },
   "label": "Ghost",
   "steps": 2,
-  "input_time": true,
+  "input_time": false,
   "parameters": [
     {
       "name": "ghost_strength",

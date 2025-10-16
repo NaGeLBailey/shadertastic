@@ -1,4 +1,8 @@
 {
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io"
+  },
   "label": "Shake on sound",
   "steps": 1,
   "input_time": true,

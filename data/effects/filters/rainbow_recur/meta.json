@@ -1,4 +1,8 @@
 {
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io"
+  },
   "label": "Rainbow Recur",
   "steps": 4,
   "input_time": true,

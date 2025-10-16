@@ -1,4 +1,9 @@
 {
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io",
+    "description": "Flip color channels"
+  },
   "label": "Color flip",
   "revision": 1,
   "steps": 1,
@@ -13,7 +18,8 @@
         {"label": "R ↔ G", "value": 2},
         {"label": "R ↔ B", "value": 3},
         {"label": "G ↔ B", "value": 4}
-      ]
+      ],
+      "default": 0
     }
   ]
 }

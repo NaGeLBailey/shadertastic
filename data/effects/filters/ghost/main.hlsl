@@ -48,34 +48,6 @@ float4 EffectLinear(float2 uv)
         prev_tex.Sample(textureSampler, uv),
         ghost_strength
     );
-    /*
-    if (current_step == 0) {
-        if (uv[0] > 0.5 && uv[1] > 0.5) {
-            return prev_tex.Sample(textureSampler, (uv-0.5)*2);
-        }
-        float4 result = float4(1.0, 0.0, 0.5, 1.0);
-        return result * image.Sample(textureSampler, uv);
-    }
-    else {
-        if (uv[0] > 0.5 && uv[1] > 0.5) {
-            return prev_tex.Sample(textureSampler, (uv-0.5)*2);
-        }
-        return image.Sample(textureSampler, uv);
-    }
-    */
-    /*float t2 = fmod(time, 0.2);
-    if (t2 < 0.01) {
-        return image.Sample(textureSampler, uv);
-    }
-    else {
-        return prev_tex.Sample(textureSampler, uv );
-    }
-
-    return lerp(
-        image.Sample(textureSampler, uv),
-        prev_tex.Sample(textureSampler, uv),
-        ghost_strength
-    );*/
 }
 //----------------------------------------------------------------------------------------------------------------------
 
