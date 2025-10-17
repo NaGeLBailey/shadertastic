@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#include <string>
+#include "parameter.hpp"
+
 class effect_parameter_text : public effect_parameter {
     public:
         std::string value;
@@ -23,7 +26,7 @@ class effect_parameter_text : public effect_parameter {
         }
 
         effect_param_datatype type() override {
-            return PARAM_DATATYPE_UNKNOWN;
+            return PARAM_DATATYPE_TEXT;
         }
 
         void initialize_params(obs_data_t *metadata, const std::string &effect_path) override {

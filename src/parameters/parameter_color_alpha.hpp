@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#include <string>
+#include "parameter.hpp"
+
 class effect_parameter_color_alpha : public effect_parameter {
     private:
         int default_value = (int)0xFF000000;

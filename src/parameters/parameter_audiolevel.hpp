@@ -17,6 +17,7 @@
 
 #include <list>
 #include <string>
+#include "parameter.hpp"
 #include "../util/compare_nocase.hpp"
 #include "../util/time_util.hpp"
 

@@ -15,6 +15,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#include <string>
+#include "parameter.hpp"
 #include "../util/compare_nocase.hpp"
 
 static bool effect_parameter_source_add(void *data, obs_source_t *source) {

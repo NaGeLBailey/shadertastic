@@ -15,8 +15,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#ifndef SHADERTASTIC_PARAMETER_FACTORY_HPP
-#define SHADERTASTIC_PARAMETER_FACTORY_HPP
+#ifndef SHADERTASTIC_PARAMETER_FACTORY_H
+#define SHADERTASTIC_PARAMETER_FACTORY_H
 
 class effect_parameter_factory {
     public:
@@ -28,4 +28,4 @@ class effect_parameter_factory {
 
 inline effect_parameter_factory parameter_factory;
 
-#endif /* SHADERTASTIC_PARAMETER_FACTORY_HPP */
+#endif /* SHADERTASTIC_PARAMETER_FACTORY_H */

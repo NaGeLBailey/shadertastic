@@ -15,6 +15,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#include <string>
+#include "parameter.hpp"
 #include "../util/string_util.h"
 #include "../util/file_util.h"
 

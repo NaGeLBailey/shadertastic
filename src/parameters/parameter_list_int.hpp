@@ -17,6 +17,7 @@
 
 #include <vector>
 #include <string>
+#include "parameter.hpp"
 
 struct effect_parameter_list_int_value {
     std::string label;

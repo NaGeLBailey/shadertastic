@@ -18,9 +18,10 @@
 #ifndef SHADERTASTIC_PARAMETER_PREV_FRAME_HPP
 #define SHADERTASTIC_PARAMETER_PREV_FRAME_HPP
 
+#include <string>
+#include "parameter.hpp"
 #include "../util/string_util.h"
 #include "../util/file_util.h"
-#include "parameter.hpp"
 
 class effect_parameter_prev_frame : public effect_parameter {
     private:
