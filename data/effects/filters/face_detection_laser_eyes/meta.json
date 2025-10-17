@@ -5,7 +5,6 @@
   },
   "label": "[Face Detection] Laser Eyes",
   "steps": 4,
-  "input_time": false,
   "input_facedetection": true,
   "parameters": [
     {

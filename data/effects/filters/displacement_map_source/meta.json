@@ -5,7 +5,6 @@
   },
   "label": "Displacement Map (Source)",
   "steps": 1,
-  "input_time": false,
   "parameters": [
     {
       "name": "displace_mode",

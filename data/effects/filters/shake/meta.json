@@ -5,7 +5,6 @@
   },
   "label": "Shake on sound",
   "steps": 1,
-  "input_time": true,
   "parameters": [
     {
       "name": "audio_level",
@@ -41,6 +40,12 @@
       "max": 1.0,
       "default": 0.8,
       "step": 0.01
+    },
+    {
+      "name": "time",
+      "label": "time",
+      "type": "time",
+      "reset_on_show": false
     }
   ]
 }

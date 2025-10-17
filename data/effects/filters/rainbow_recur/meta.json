@@ -5,7 +5,6 @@
   },
   "label": "Rainbow Recur",
   "steps": 4,
-  "input_time": true,
   "parameters": [
     {
       "name": "prev_tex0",
