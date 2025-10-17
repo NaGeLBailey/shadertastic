@@ -17,6 +17,7 @@ Copyright (C) 2023 by xurei <xureilab@gmail.com>
 
 #ifndef SHADERTASTIC_TIME_UTIL_HPP
 #define SHADERTASTIC_TIME_UTIL_HPP
+
 #include <chrono>
 
 inline unsigned long get_time_ms() {
@@ -28,4 +29,5 @@ inline unsigned long get_time_ms() {
 
     return duration;
 }
+
 #endif // SHADERTASTIC_TIME_UTIL_HPP

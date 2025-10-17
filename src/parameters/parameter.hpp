@@ -146,4 +146,4 @@ class effect_parameter {
         }
 };
 
-#endif /* SHADERTASTIC_PARAMETER_HPP */
+#endif // SHADERTASTIC_PARAMETER_HPP

@@ -28,4 +28,4 @@ class effect_parameter_factory {
 
 inline effect_parameter_factory parameter_factory;
 
-#endif /* SHADERTASTIC_PARAMETER_FACTORY_H */
+#endif // SHADERTASTIC_PARAMETER_FACTORY_H

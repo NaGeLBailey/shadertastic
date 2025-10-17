@@ -41,4 +41,4 @@ inline cv::Mat rgbaToBgrFloat(const cv::Mat& rgbaImage) {
     return _rgbaToBgr(rgbaImage, CV_32FC3);
 }
 
-#endif /* SHADERTASTIC_RGBA_TO_RGB_H */
+#endif // SHADERTASTIC_RGBA_TO_RGB_H

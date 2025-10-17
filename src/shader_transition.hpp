@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef SHADERTASTIC_SHADER_TRANSITION_HPP
+#define SHADERTASTIC_SHADER_TRANSITION_HPP
+
 #include <QClipboard>
 #include <QMessageBox>
 
@@ -443,3 +446,5 @@ static enum gs_color_space shadertastic_transition_get_color_space(void *data, s
     return obs_transition_video_get_color_space(s->source);
 }
 //----------------------------------------------------------------------------------------------------------------------
+
+#endif // SHADERTASTIC_SHADER_TRANSITION_HPP

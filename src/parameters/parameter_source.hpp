@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef SHADERTASTIC_PARAMETER_SOURCE_HPP
+#define SHADERTASTIC_PARAMETER_SOURCE_HPP
+
 #include <string>
 #include "parameter.hpp"
 #include "../util/compare_nocase.hpp"
@@ -159,3 +162,5 @@ class effect_parameter_source : public effect_parameter {
             obs_source_release(ref_source);
         }
 };
+
+#endif // SHADERTASTIC_PARAMETER_SOURCE_HPP

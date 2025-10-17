@@ -139,4 +139,4 @@ class effect_parameter_prev_frame : public effect_parameter {
         }
 };
 
-#endif /* SHADERTASTIC_PARAMETER_PREV_FRAME_HPP */
+#endif // SHADERTASTIC_PARAMETER_PREV_FRAME_HPP

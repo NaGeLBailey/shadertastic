@@ -29,4 +29,4 @@ void apply_settings(obs_data_t *settings);
 
 const shadertastic_settings_t & shadertastic_settings();
 
-#endif /* SHADERTASTIC_SETTINGS_H */
+#endif // SHADERTASTIC_SETTINGS_H

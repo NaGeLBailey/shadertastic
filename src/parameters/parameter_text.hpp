@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef SHADERTASTIC_PARAMETER_TEXT_HPP
+#define SHADERTASTIC_PARAMETER_TEXT_HPP
+
 #include <string>
 #include "parameter.hpp"
 
@@ -55,3 +58,5 @@ class effect_parameter_text : public effect_parameter {
             *((int*)this->data) = 0;
         }
 };
+
+#endif // SHADERTASTIC_PARAMETER_TEXT_HPP

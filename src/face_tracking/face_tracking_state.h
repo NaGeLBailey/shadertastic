@@ -40,4 +40,4 @@ struct face_tracking_state {
     std::unique_ptr<FaceTrackingCropShader> crop_shader;
 };
 
-#endif /* SHADERTASTIC_FACE_TRACKING_STATE_H */
+#endif // SHADERTASTIC_FACE_TRACKING_STATE_H

@@ -64,4 +64,4 @@ void face_tracking_render(face_tracking_state *s, effect_shader *main_shader);
 
 void face_tracking_destroy(face_tracking_state *s);
 
-#endif /* SHADERTASTIC_FACE_TRACKING_H */
+#endif // SHADERTASTIC_FACE_TRACKING_H

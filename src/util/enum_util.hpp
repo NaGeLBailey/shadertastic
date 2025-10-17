@@ -1,3 +1,6 @@
+#ifndef SHADERTASTIC_ENUM_UTIL_HPP
+#define SHADERTASTIC_ENUM_UTIL_HPP
+
 const char* gsColorFormatToString(gs_color_format format) {
     switch (format) {
         case GS_UNKNOWN:
@@ -65,3 +68,5 @@ const char* gsColorSpaceToString(gs_color_space space) {
             return "Unknown Color Space";
     }
 }
+
+#endif // SHADERTASTIC_ENUM_UTIL_HPP

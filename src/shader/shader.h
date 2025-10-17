@@ -62,4 +62,4 @@ class effect_shader {
     //static std::string removeComments(const std::string& str);
 };
 
-#endif /* SHADERTASTIC_SHADER_H */
+#endif // SHADERTASTIC_SHADER_H

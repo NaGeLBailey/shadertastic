@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef SHADERTASTIC_HPP
+#define SHADERTASTIC_HPP
+
 #include "face_tracking/face_tracking_state.h"
 
 typedef std::map<std::string, shadertastic_effect_t> shadertastic_effects_map_t;
@@ -130,3 +133,5 @@ MODULE_EXPORT [[maybe_unused]] const char *obs_module_description(void) {
     return obs_module_text("ModuleDescription");
 }
 //----------------------------------------------------------------------------------------------------------------------
+
+#endif // SHADERTASTIC_HPP

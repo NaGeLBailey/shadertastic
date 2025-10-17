@@ -43,4 +43,4 @@ class shaders_library_t {
 
 inline shaders_library_t shaders_library;
 
-#endif /* SHADERTASTIC_SHADERS_LIBRARY_H */
+#endif // SHADERTASTIC_SHADERS_LIBRARY_H

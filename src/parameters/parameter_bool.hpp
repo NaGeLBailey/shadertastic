@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef SHADERTASTIC_PARAMETER_BOOL_HPP
+#define SHADERTASTIC_PARAMETER_BOOL_HPP
+
 #include <string>
 #include "parameter.hpp"
 
@@ -54,3 +57,5 @@ class effect_parameter_bool : public effect_parameter {
             *((int*)this->data) = obs_data_get_bool(settings, full_param_name) ? 1 : 0;
         }
 };
+
+#endif // SHADERTASTIC_PARAMETER_BOOL_HPP

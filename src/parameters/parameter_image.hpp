@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef SHADERTASTIC_PARAMETER_IMAGE_HPP
+#define SHADERTASTIC_PARAMETER_IMAGE_HPP
+
 #include <string>
 #include "parameter.hpp"
 #include "../util/string_util.h"
@@ -215,3 +218,5 @@ class effect_parameter_image : public effect_parameter {
             try_gs_effect_set_texture(name.c_str(), shader_param, this->texture);
         }
 };
+
+#endif // SHADERTASTIC_PARAMETER_IMAGE_HPP

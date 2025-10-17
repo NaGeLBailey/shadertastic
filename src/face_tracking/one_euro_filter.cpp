@@ -1,4 +1,4 @@
-/* -*- coding: utf-8 -*-
+/** -*- coding: utf-8 -*-
  *
  * Source: https://github.com/casiez/OneEuroFilter
  *

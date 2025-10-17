@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef SHADERTASTIC_PARAMETER_AUDIOLEVEL_HPP
+#define SHADERTASTIC_PARAMETER_AUDIOLEVEL_HPP
+
 #include <list>
 #include <string>
 #include "parameter.hpp"
@@ -154,3 +157,5 @@ class effect_parameter_audiolevel : public effect_parameter {
 };
 
 
+
+#endif // SHADERTASTIC_PARAMETER_AUDIOLEVEL_HPP

@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef SHADERTASTIC_SHADER_FILTER_HPP
+#define SHADERTASTIC_SHADER_FILTER_HPP
+
 obs_properties_t *shadertastic_filter_properties(void *data);
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -388,3 +391,5 @@ void shadertastic_filter_hide(void *data) {
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
+
+#endif // SHADERTASTIC_SHADER_FILTER_HPP

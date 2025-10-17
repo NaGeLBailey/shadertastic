@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef SHADERTASTIC_PARAMETER_FLOAT_HPP
+#define SHADERTASTIC_PARAMETER_FLOAT_HPP
+
 #include <string>
 #include "parameter.hpp"
 
@@ -71,3 +74,5 @@ class effect_parameter_float : public effect_parameter {
             //debug("%s = %f", full_param_name, *((float*)this->data));
         }
 };
+
+#endif // SHADERTASTIC_PARAMETER_FLOAT_HPP

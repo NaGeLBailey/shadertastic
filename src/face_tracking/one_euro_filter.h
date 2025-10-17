@@ -1,4 +1,4 @@
-/* -*- coding: utf-8 -*-
+/** -*- coding: utf-8 -*-
  *
  * Source: https://github.com/casiez/OneEuroFilter
  *
@@ -33,6 +33,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
+#ifndef SHADERTASTIC_ONE_EURO_FILTER_H
+#define SHADERTASTIC_ONE_EURO_FILTER_H
 
 #include <iostream>
 #include <stdexcept>
@@ -123,3 +126,5 @@ public:
      */
     void setDerivateCutoff(float dc);
 };
+
+#endif // SHADERTASTIC_ONE_EURO_FILTER_H

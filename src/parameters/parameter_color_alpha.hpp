@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef SHADERTASTIC_PARAMETER_COLOR_ALPHA_HPP
+#define SHADERTASTIC_PARAMETER_COLOR_ALPHA_HPP
+
 #include <string>
 #include "parameter.hpp"
 
@@ -76,3 +79,5 @@ class effect_parameter_color_alpha : public effect_parameter {
             vec4_from_rgba((vec4*) this->data, (uint32_t)obs_data_get_int(settings, full_param_name));
         }
 };
+
+#endif // SHADERTASTIC_PARAMETER_COLOR_ALPHA_HPP

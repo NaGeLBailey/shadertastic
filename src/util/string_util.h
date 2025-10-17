@@ -23,4 +23,4 @@ Copyright (C) 2023 by xurei <xureilab@gmail.com>
 bool ends_with(const std::string &input, const std::string &suffix);
 bool starts_with(const std::string &input, const std::string &prefix);
 
-#endif //SHADERTASTIC_STRING_UTIL_H
+#endif // SHADERTASTIC_STRING_UTIL_H

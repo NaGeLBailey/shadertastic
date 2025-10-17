@@ -45,4 +45,4 @@ class params_list {
     }
 };
 
-#endif /* SHADERTASTIC_PARAMS_LIST_HPP */
+#endif // SHADERTASTIC_PARAMS_LIST_HPP

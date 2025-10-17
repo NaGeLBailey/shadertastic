@@ -1,3 +1,6 @@
+#ifndef SHADERTASTIC_DEBUG_UTIL_HPP
+#define SHADERTASTIC_DEBUG_UTIL_HPP
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
@@ -8,7 +11,7 @@ void __debug_save_texture_png(gs_stagesurf_t *stagesurf, uint32_t cx, uint32_t c
 
     //gs_texture_map(texture, videoData, &videoLinesize);
     stbi_write_png(path, cx, cy, 4, videoData, 0);
-    delete videoData;
+    delete[] videoData;
 }
 
 void __debug_save_texture_png(gs_texture_t *texture, uint32_t cx, uint32_t cy, const char* path) {
@@ -22,3 +25,5 @@ void __debug_save_texture_png(gs_texture_t *texture, uint32_t cx, uint32_t cy, c
 	gs_stagesurface_destroy(stagesurf);
 	//obs_leave_graphics();
 }
+
+#endif // SHADERTASTIC_DEBUG_UTIL_HPP

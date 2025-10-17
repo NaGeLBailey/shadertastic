@@ -57,4 +57,4 @@ struct shadertastic_effect_t {
     void release();
 };
 
-#endif /* SHADERTASTIC_EFFECT_HPP */
+#endif // SHADERTASTIC_EFFECT_HPP

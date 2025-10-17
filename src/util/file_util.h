@@ -37,4 +37,4 @@ std::vector<std::string> list_directories(const char* folderPath);
 
 std::string create_temp_file();
 
-#endif //FILE_UTIL_HPP
+#endif // FILE_UTIL_HPP

@@ -20,4 +20,4 @@ struct double2 {
     double y;
 };
 
-#endif /* SHADERTASTIC_TUPLE_H */
+#endif // SHADERTASTIC_TUPLE_H

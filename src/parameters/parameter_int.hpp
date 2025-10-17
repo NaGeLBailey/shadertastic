@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
+#ifndef SHADERTASTIC_PARAMETER_INT_HPP
+#define SHADERTASTIC_PARAMETER_INT_HPP
+
 #include <string>
 #include "parameter.hpp"
 
@@ -71,3 +74,5 @@ class effect_parameter_int : public effect_parameter {
             //debug("%s = %d", full_param_name, *((int*)this->data));
         }
 };
+
+#endif // SHADERTASTIC_PARAMETER_INT_HPP
