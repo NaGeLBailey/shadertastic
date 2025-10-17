@@ -20,6 +20,7 @@
 
 #include "parameter_datatype.hpp"
 #include "../try_gs_effect_set.h"
+#include "../shadertastic_common.hpp"
 
 static std::string get_full_param_name_static(const std::string &effect_name, const std::string &param_name) {
     return effect_name + '.' + param_name;
@@ -67,6 +68,11 @@ class effect_parameter {
             devmode = obs_data_get_bool(metadata, "devmode");
         }
 
+        virtual void tick(shadertastic_common *s) {
+            UNUSED_PARAMETER(s);
+            /* no-op by default */
+        }
+
         /**
          * Called in the factory, after creation of the parameter.
          * This is where you should set the attributes of the parameter and their default values.
@@ -80,7 +86,7 @@ class effect_parameter {
         virtual void initialize_params(obs_data_t *metadata, const std::string &effect_path) = 0;
 
         /**
-         * This is where you should set the defaults specified in the metadata.
+         * This is where you should set the defaults as explicitly specified in the metadata.
          * See also initialize_params for details about the defaults
          * @param settings
          * @param full_param_name

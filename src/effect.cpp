@@ -71,6 +71,15 @@ void shadertastic_effect_t::load() {
             parameters = obs_data_array_create();
         }
 
+        // LEGACY - input_time is deprecated. Migrating it as a parameter
+        if (input_time) {
+            obs_data_t *param_metadata = obs_data_create();
+            obs_data_set_string(param_metadata, "name", "time");
+            obs_data_set_string(param_metadata, "type", "time");
+            obs_data_set_string(param_metadata, "reset_on_show", "prompt");
+            obs_data_array_insert(parameters, 0, param_metadata);
+        }
+
         // Copy the effect params map to allow recycling
         params_list previous_effect_params(effect_params);
         effect_params.clear();

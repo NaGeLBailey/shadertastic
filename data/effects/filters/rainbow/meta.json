@@ -1,4 +1,8 @@
 {
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io"
+  },
   "label": "Rainbow",
   "revision": 1,
   "steps": 1,
@@ -11,7 +15,13 @@
       "values": [
         {"label": "Linear", "value": 0},
         {"label": "Random", "value": 1}
-      ]
+      ],
+      "default": 0
+    },
+    {
+      "name": "time",
+      "label": "time",
+      "type": "time"
     }
   ]
 }

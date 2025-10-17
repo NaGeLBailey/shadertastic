@@ -12,7 +12,6 @@ lab/
 cmake-build-*/
 build/
 build-prod/
-/src/version.h
 
 # Development files
 *.mp4

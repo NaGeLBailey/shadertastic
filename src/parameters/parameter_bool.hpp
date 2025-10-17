@@ -47,9 +47,15 @@ class effect_parameter_bool : public effect_parameter {
         }
 
         void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
-            auto prop = obs_properties_add_bool(props, full_param_name, label.c_str());
+            obs_property_t *list_ui = obs_properties_add_list(
+                props, full_param_name, label.c_str(),
+                OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_BOOL
+            );
+            obs_property_list_add_bool(list_ui, "Yes", true);
+            obs_property_list_add_bool(list_ui, "No", false);
+
             if (!description.empty()) {
-                obs_property_set_long_description(prop, obs_module_text(description.c_str()));
+                obs_property_set_long_description(list_ui, obs_module_text(description.c_str()));
             }
         }
 

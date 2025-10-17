@@ -74,8 +74,15 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
 
     // Set defaults for each effect
     for (auto& [effect_name, effect] : *(s->effects)) {
+        // LEGACY - input_time is deprecated. Migrating it as a parameter
         if (effect.input_time) {
-            obs_data_set_default_double(settings, get_full_param_name_static(effect_name, std::string("speed")).c_str(), 0.1);
+            obs_data_set_default_double(settings, get_full_param_name_static(effect_name, "speed").c_str(), 0.1);
+            double speed = obs_data_get_double(settings, get_full_param_name_static(effect_name, "speed").c_str());
+            obs_data_set_default_double(settings, get_full_param_name_static(effect_name, "time.speed").c_str(), speed);
+
+            obs_data_set_default_bool(settings, get_full_param_name_static(effect_name, "reset_time_on_show").c_str(), false);
+            bool reset_time_on_show = obs_data_get_bool(settings, get_full_param_name_static(effect_name, "reset_time_on_show").c_str());
+            obs_data_set_default_bool(settings, get_full_param_name_static(effect_name, "time.reset_time_on_show").c_str(), reset_time_on_show);
         }
     }
 
@@ -134,12 +141,6 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
             param->set_data_from_settings(settings, full_param_name.c_str());
             //info("Assigned value:  %s %lu", full_param_name, param.data_size);
         }
-
-        s->speed = obs_data_get_double(settings, get_full_param_name_static(selected_effect_name, "speed").c_str());
-        s->reset_time_on_show = obs_data_get_bool(settings, get_full_param_name_static(selected_effect_name, "reset_time_on_show").c_str());
-        if (s->selected_effect->input_time) {
-            debug("%s RESET %i", get_full_param_name_static(selected_effect_name, "reset_time_on_show").c_str(), s->reset_time_on_show ? 1 : 0);
-        }
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -156,19 +157,21 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
     if (!s->face_tracking.created && s->selected_effect && s->selected_effect->input_facedetection) {
         face_tracking_create(&s->face_tracking);
     }
-    if (is_enabled != s->was_enabled) {
-        s->was_enabled = is_enabled;
-        debug("TOGGLE ENABLED %i", is_enabled ? 1 : 0);
-
-        if (s->reset_time_on_show) {
-            s->time = 0.0;
-            s->prev_time = 0.0;
+    uint64_t frame_interval = obs_get_frame_interval_ns();
+    s->time += (
+        (float)(((double)frame_interval/1000000000.0f))
+        // Converting to double first before reconverting to float to keep precision. Might be useless
+    );
+    if (is_enabled && s->selected_effect) {
+        for (effect_parameter* param : s->selected_effect->effect_params) {
+            if (param) {
+                param->tick(s);
+            }
         }
     }
-    uint64_t frame_interval = obs_get_frame_interval_ns();
-    s->time += (double)(
-        s->speed < 0.0001 ? 0.0 : (((double)frame_interval/1000000000.0) * s->speed)
-    );
+    if (is_enabled != s->was_enabled) {
+        s->was_enabled = is_enabled;
+    }
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -223,7 +226,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                         gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
                     }
                 }
-                if (texrender_ok && selected_effect->prev_frames_to_keep[current_step]) {
+                if (texrender_ok && current_step < (int)selected_effect->prev_frames_to_keep.size() && selected_effect->prev_frames_to_keep[current_step]) {
                     texrender_ok = selected_effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space);
                 }
 
@@ -321,10 +324,10 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
         obs_properties_t *warning_group = nullptr;
         //obs_properties_add_text(effect_group, "", effect_name, OBS_TEXT_INFO);
 
-        if (effect.input_time) {
-            obs_properties_add_float_slider(effect_group, get_full_param_name_static(effect_name, std::string("speed")).c_str(), "Speed", 0.0, 1.0, 0.01);
-            obs_properties_add_bool(effect_group, get_full_param_name_static(effect_name, std::string("reset_time_on_show")).c_str(), "Reset time on visibility toggle");
-        }
+//        if (effect.input_time) {
+//            obs_properties_add_float_slider(effect_group, get_full_param_name_static(effect_name, std::string("speed")).c_str(), "Speed", 0.0, 1.0, 0.01);
+//            obs_properties_add_bool(effect_group, get_full_param_name_static(effect_name, std::string("reset_time_on_show")).c_str(), "Reset time on visibility toggle");
+//        }
 
         for (auto param: effect.effect_params) {
             std::string full_param_name = param->get_full_param_name(effect_name);
