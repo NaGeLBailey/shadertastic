@@ -46,7 +46,8 @@ bool effect_shader::load(const char *shader_path) {
             "uniform texture2d image;\n" +
             "uniform texture2d tex_a;\n" +
             "uniform texture2d tex_b;\n" +
-            "uniform texture2d tex_interm;\n" +
+            "uniform texture2d tex_interm;\n"
+            "uniform int frame_index;\n" +
             "uniform float time;\n" +
             "uniform float delta_time;\n" +
             "uniform float upixel;\n" +
@@ -72,6 +73,7 @@ bool effect_shader::load(const char *shader_path) {
             param_tex_a = gs_effect_get_param_by_name(gs_effect, "tex_a");
             param_tex_b = gs_effect_get_param_by_name(gs_effect, "tex_b");
             param_tex_interm = gs_effect_get_param_by_name(gs_effect, "tex_interm");
+            param_frame_index = gs_effect_get_param_by_name(gs_effect, "frame_index");
             param_time = gs_effect_get_param_by_name(gs_effect, "time");
             param_delta_time = gs_effect_get_param_by_name(gs_effect, "delta_time");
             param_upixel = gs_effect_get_param_by_name(gs_effect, "upixel");

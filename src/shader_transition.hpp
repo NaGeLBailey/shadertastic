@@ -150,7 +150,6 @@ void shadertastic_transition_update(void *data, obs_data_t *settings) {
 
 void shadertastic_transition_render_init(void *data, gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy) {
     debug("shadertastic_transition_render_init");
-    UNUSED_PARAMETER(data);
     UNUSED_PARAMETER(t);
     UNUSED_PARAMETER(a);
     UNUSED_PARAMETER(b);
@@ -161,6 +160,15 @@ void shadertastic_transition_render_init(void *data, gs_texture_t *a, gs_texture
 }
 //----------------------------------------------------------------------------------------------------------------------
 
+static void shadertastic_transition_tick(void *data, float deltatime_seconds) {
+    struct shadertastic_transition *s = shadertastic_transition_cast(data);
+    obs_source_t *target = obs_filter_get_target(s->source);
+    s->time += deltatime_seconds;
+    s->delta_time = deltatime_seconds;
+    s->frame_index++;
+}
+//----------------------------------------------------------------------------------------------------------------------
+
 void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy) {
     struct shadertastic_transition *s = shadertastic_transition_cast(data);
 
@@ -168,7 +176,6 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
     gs_enable_framebuffer_srgb(true);
 
     shadertastic_effect_t *effect = s->selected_effect;
-    s->delta_time = t - s->prev_time;
 
     if (effect != nullptr) {
         gs_texture_t *interm_texture = s->transparent_texture;
@@ -209,7 +216,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
                     GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
                     GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
                 );
-                effect->set_params(a, b, t, s->delta_time, cx, cy, s->rand_seed);
+                effect->set_params(a, b, s->frame_index, t, s->delta_time, cx, cy, s->rand_seed);
                 effect->set_step_params(current_step, interm_texture);
                 effect->render_shader(cx, cy, !is_final_step && !is_saved_step);
 
@@ -230,7 +237,6 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
     }
 
     gs_enable_framebuffer_srgb(previous);
-    s->prev_time = t;
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -263,7 +269,6 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
     float t = obs_transition_get_time(s->source);
     if (t >= 1.0f) {
         s->transitioning = false;
-        s->prev_time = 0.0f;
     }
 
     if (s->transitioning) {

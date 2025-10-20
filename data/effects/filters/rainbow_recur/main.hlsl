@@ -1,5 +1,6 @@
 // Common parameters for all shaders, as reference. Do not uncomment this (but you can remove it safely).
 /*
+uniform int frame_index;       // Auto incremented value of the current frame. Does not increment during steps
 uniform float time;            // Time since the shader is running. Goes from 0 to 1 for transition effects; goes from 0 to infinity for filter effects
 uniform texture2d image;       // Texture of the source (filters only)
 uniform texture2d tex_interm;  // Intermediate texture where the previous step will be rendered (for multistep effects)
@@ -13,7 +14,6 @@ uniform int current_step;      // index of current step (for multistep effects)
 uniform float ghost_strength;
 uniform texture2d prev_tex0;
 uniform texture2d prev_tex1;
-uniform texture2d prev_tex2;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -47,18 +47,25 @@ VertData VSDefault(VertData v_in)
 float4 EffectLinear(float2 uv)
 {
     if (current_step == 0) {
-        return image.Sample(textureSampler, uv);
+        if (frame_index % 2 == 0) {
+            return image.Sample(textureSampler, uv);
+        }
+        else {
+            return prev_tex0.Sample(textureSampler, uv);
+        }
     }
     else if (current_step == 1) {
-        return prev_tex0.Sample(textureSampler, uv);
-    }
-    else if (current_step == 2) {
-        return prev_tex1.Sample(textureSampler, uv);
+        if (frame_index % 2 != 0) {
+            return image.Sample(textureSampler, uv);
+        }
+        else {
+            return prev_tex1.Sample(textureSampler, uv);
+        }
     }
     else {
-        float4 imgr = prev_tex1.Sample(textureSampler, uv);
-        float4 imgg = prev_tex2.Sample(textureSampler, uv);
-        float4 imgb = image.Sample(textureSampler, uv);
+        float4 imgr = prev_tex0.Sample(textureSampler, uv - float2(0.001, 0.0));
+        float4 imgb = prev_tex1.Sample(textureSampler, uv + float2(0.001, 0.0));
+        float4 imgg = image.Sample(textureSampler, uv);
         float4 result = float4(imgr.r, imgg.g, imgb.b, 1.0);
         return result;
     }

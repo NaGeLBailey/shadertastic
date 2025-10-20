@@ -36,10 +36,12 @@
           "type": "object"
         },
         "input_facedetection": {
+          "deprecated": true,
           "description": "DEPRECATED Old way of using the face detection parameter in the effect. Use `param_face_detection` instead",
           "type": "boolean"
         },
         "input_time": {
+          "deprecated": true,
           "description": "DEPRECATED Old way of using a time parameter in the effect. Use `param_time` instead",
           "type": "boolean"
         },
@@ -604,12 +606,6 @@
               "type": "boolean"
             }
           },
-          "required": [
-            "show_ui",
-            "min",
-            "max",
-            "default"
-          ],
           "type": "object"
         },
         "type": {

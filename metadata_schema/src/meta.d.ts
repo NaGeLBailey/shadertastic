@@ -190,6 +190,10 @@ type param_prev_frame = param_common & {
      * The step to keep as a previous frame. It must be less or equal to the number of steps defined in the effect root
      * metadata.
      *
+     * If set to -1 (the default value), the last step will be used
+     *
+     * @default -1
+     *
      * @type integer
      **/
     step: number,
@@ -236,7 +240,7 @@ type param_time = param_common & {
          * If "prompt", let the user decide by showing an input in the property UI.
          * @default: true
          */
-        show_ui: boolean,
+        show_ui?: boolean,
         /**
          * If show, name of the input in the properties UI
          * @default: "Speed"
@@ -246,16 +250,16 @@ type param_time = param_common & {
          * Minimum allowed speed
          * @default: 0.0
          */
-        min: number,
+        min?: number,
         /**
          * Maximum allowed speed
          * @default: 1.0
          */
-        max: number,
+        max?: number,
         /**
          * @default: 1.0
          */
-        default: number,
+        default?: number,
     }
 }
 
@@ -279,7 +283,7 @@ export type meta = {
      * @type integer
      * @default 1
      */
-    metafileVersion?: number,
+    metafileVersion: number,
 
     /**
      * About information. You can add whatever you want next to the author name and the description of the effect
@@ -315,11 +319,13 @@ export type meta = {
 
     /**
      * DEPRECATED Old way of using a time parameter in the effect. Use `param_time` instead
+     * @deprecated
      */
     input_time?: boolean,
 
     /**
      * DEPRECATED Old way of using the face detection parameter in the effect. Use `param_face_detection` instead
+     * @deprecated
      */
     input_facedetection?: boolean,
 }

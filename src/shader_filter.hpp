@@ -146,7 +146,6 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
 //----------------------------------------------------------------------------------------------------------------------
 
 static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
-    UNUSED_PARAMETER(deltatime_seconds);
     struct shadertastic_filter *s = shadertastic_filter_cast(data);
     obs_source_t *target = obs_filter_get_target(s->source);
 
@@ -157,11 +156,8 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
     if (!s->face_tracking.created && s->selected_effect && s->selected_effect->input_facedetection) {
         face_tracking_create(&s->face_tracking);
     }
-    uint64_t frame_interval = obs_get_frame_interval_ns();
-    s->time += (
-        (float)(((double)frame_interval/1000000000.0f))
-        // Converting to double first before reconverting to float to keep precision. Might be useless
-    );
+    s->time += deltatime_seconds;
+    s->delta_time = deltatime_seconds;
     if (is_enabled && s->selected_effect) {
         for (effect_parameter* param : s->selected_effect->effect_params) {
             if (param) {
@@ -172,6 +168,7 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
     if (is_enabled != s->was_enabled) {
         s->was_enabled = is_enabled;
     }
+    s->frame_index++;
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -180,7 +177,6 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     UNUSED_PARAMETER(effect);
     struct shadertastic_filter *s = shadertastic_filter_cast(data);
     float filter_time = (float)s->time;
-    s->delta_time = filter_time - s->prev_time;
 
     const enum gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
@@ -231,7 +227,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                 }
 
                 if (texrender_ok) {
-                    selected_effect->set_params(nullptr, nullptr, filter_time, s->delta_time, cx, cy, s->rand_seed);
+                    selected_effect->set_params(nullptr, nullptr, s->frame_index, filter_time, s->delta_time, cx, cy, s->rand_seed);
                     selected_effect->set_step_params(current_step, interm_texture);
 
                     selected_effect->main_shader->render(s->source, cx, cy);
@@ -255,8 +251,6 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
         //debug("%s : No effect selected", obs_source_get_name(s->source));
         obs_source_skip_video_filter(s->source);
     }
-
-    s->prev_time = filter_time;
 }
 //----------------------------------------------------------------------------------------------------------------------
 

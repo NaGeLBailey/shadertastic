@@ -12,8 +12,8 @@ struct shadertastic_common {
     shadertastic_effects_map_t *effects{};
     shadertastic_effect_t *selected_effect{};
     obs_source_t *source{};
+    int frame_index = 0;
     float time = 0.0;
-    float prev_time = 0.0;
     float delta_time = 0.0;
 
     // Filter previous state (enabled/disabled)

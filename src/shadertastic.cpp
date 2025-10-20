@@ -22,6 +22,7 @@
 
 #include <obs-module.h>
 #include <obs-frontend-api.h>
+
 #include <QAction>
 #include <QApplication>
 #include <QCheckBox>
@@ -34,26 +35,26 @@
 #include <QPushButton>
 #include <QSpacerItem>
 #include <QVBoxLayout>
+#include <QDoubleSpinBox>
+#include <util/platform.h>
 #define QT_UTF8(str) QString::fromUtf8(str, -1)
 
-#include <util/platform.h>
-#include <QDoubleSpinBox>
 #include "version.h"
-#include "logging_functions.hpp"
-#include "is_module_loaded.h"
 
 #ifdef DEV_MODE
 #include "util/enum_util.hpp"
 #include "util/debug_util.hpp"
 #endif
+
+#include "effect.h"
+#include "face_tracking/face_tracking.h"
+#include "is_module_loaded.h"
+#include "logging_functions.hpp"
+#include "settings.h"
+#include "shader/shaders_library.h"
+#include "shadertastic.hpp"
 #include "util/file_util.h"
 #include "util/time_util.hpp"
-#include "shader/shaders_library.h"
-#include "effect.h"
-
-#include "settings.h"
-#include "shadertastic.hpp"
-#include "face_tracking/face_tracking.h"
 //----------------------------------------------------------------------------------------------------------------------
 
 OBS_DECLARE_MODULE()
@@ -212,9 +213,9 @@ static void show_settings_dialog() {
     line->setLineWidth(0);
     formLayout->addRow(line);
 
-    // Developper mode
+    // Developer mode
     {
-        QCheckBox *devmodeCheckbox = new QCheckBox("Developper mode");
+        QCheckBox *devmodeCheckbox = new QCheckBox("Developer mode");
         devmodeCheckbox->setChecked(obs_data_get_bool(settings, SETTING_DEV_MODE_ENABLED));
         QObject::connect(devmodeCheckbox, &QCheckBox::clicked, [=]() {
             bool checked = devmodeCheckbox->isChecked();
@@ -375,6 +376,7 @@ static void show_settings_dialog() {
     shadertastic_transition_info.destroy = shadertastic_transition_destroy;
     shadertastic_transition_info.get_properties = shadertastic_transition_properties;
     shadertastic_transition_info.update = shadertastic_transition_update;
+    shadertastic_transition_info.video_tick = shadertastic_transition_tick;
     shadertastic_transition_info.video_render = shadertastic_transition_video_render;
     shadertastic_transition_info.load = shadertastic_transition_update;
     shadertastic_transition_info.audio_render = shadertastic_transition_audio_render;
