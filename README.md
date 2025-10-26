@@ -20,4 +20,4 @@ https://github.com/sponsors/xurei
 
 # Special mentions
 - Face detection powered by ONNX™, inspired from https://github.com/intel/openvino-plugins-for-obs-studio
-- ChatGPT, without which nothing would have been possible (especially the CMake part).
+- ludolpif for its help finding memory leaks and the shader library
