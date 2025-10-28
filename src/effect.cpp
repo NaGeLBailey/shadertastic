@@ -78,6 +78,7 @@ void shadertastic_effect_t::load() {
             obs_data_set_string(param_metadata, "type", "time");
             obs_data_set_string(param_metadata, "reset_on_show", "prompt");
             obs_data_array_insert(parameters, 0, param_metadata);
+            obs_data_release(param_metadata);
         }
 
         // Copy the effect params map to allow recycling
