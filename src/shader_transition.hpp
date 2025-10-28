@@ -33,7 +33,7 @@ static inline shadertastic_transition* shadertastic_transition_cast(void *data) 
         }
         return &shadertastic_no_transition;
     }
-    return static_cast<shadertastic_transition*>(data);
+    return static_cast<shadertastic_transition *>(data);
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -415,10 +415,14 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void shadertastic_transition_defaults(void *data, obs_data_t *settings) {
-    UNUSED_PARAMETER(data);
+void shadertastic_transition_get_defaults(obs_data_t *settings) {
     obs_data_set_default_double(settings, "transition_point", 50.0);
     obs_data_set_default_bool(settings, "auto_reload", false);
+
+    shadertastic_transition *tmp_transition = shadertastic_transition_cast(nullptr);
+    for (auto effect : *tmp_transition->effects) {
+        shadertastic_effect_set_defaults(settings, &effect.second);
+    }
 }
 //----------------------------------------------------------------------------------------------------------------------
 

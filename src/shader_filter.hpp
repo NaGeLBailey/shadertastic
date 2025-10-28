@@ -24,12 +24,14 @@ obs_properties_t *shadertastic_filter_properties(void *data);
 static shadertastic_filter *shadertastic_no_filter = nullptr;
 
 static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *source);
+//----------------------------------------------------------------------------------------------------------------------
 
 static inline shadertastic_filter* shadertastic_filter_cast(void *data) {
     if (data == nullptr) {
         if (shadertastic_no_filter == nullptr) {
             obs_data_t *no_filter_settings = obs_data_create();
             shadertastic_no_filter = static_cast<shadertastic_filter *>(shadertastic_filter_create(no_filter_settings, nullptr));
+            obs_data_release(no_filter_settings);
         }
         return shadertastic_no_filter;
     }
@@ -55,10 +57,7 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     //#endif
     debug("FILTER %s Settings : %s", (source==nullptr) ? "null" : obs_source_get_name(source), obs_data_get_json(settings));
 
-    uint8_t transparent_tex_data[2 * 2 * 4] = {0};
-    const uint8_t *transparent_tex = transparent_tex_data;
     obs_enter_graphics();
-    s->transparent_texture = gs_texture_create(2, 2, GS_RGBA, 1, &transparent_tex, 0);
     s->interm_texrender[0] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
     s->interm_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
     obs_leave_graphics();
@@ -95,11 +94,10 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void shadertastic_filter_destroy(void *data) {
+static void shadertastic_filter_destroy(void *data) {
     struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
 
     obs_enter_graphics();
-    gs_texture_destroy(s->transparent_texture);
     gs_texrender_destroy(s->interm_texrender[0]);
     gs_texrender_destroy(s->interm_texrender[1]);
     obs_leave_graphics();
@@ -168,6 +166,7 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
     }
     if (is_enabled != s->was_enabled) {
         s->was_enabled = is_enabled;
+        s->frame_index = 0;
     }
     s->frame_index++;
 }
@@ -352,10 +351,8 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
 
 void shadertastic_filter_get_defaults(obs_data_t *settings) {
     if (shadertastic_no_filter == nullptr) {
-        obs_data_t *no_filter_settings = obs_data_create();
-        shadertastic_no_filter = static_cast<shadertastic_filter *>(shadertastic_filter_create(no_filter_settings, nullptr));
+        shadertastic_no_filter = static_cast<shadertastic_filter *>(shadertastic_filter_create(settings, nullptr));
     }
-
     for (auto effect : *shadertastic_no_filter->effects) {
         shadertastic_effect_set_defaults(settings, &effect.second);
     }
@@ -389,5 +386,9 @@ void shadertastic_filter_hide(void *data) {
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
+
+void shadertastic_filter_unload() {
+    shadertastic_filter_destroy(shadertastic_no_filter);
+}
 
 #endif // SHADERTASTIC_SHADER_FILTER_HPP

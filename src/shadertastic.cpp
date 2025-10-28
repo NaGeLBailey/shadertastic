@@ -142,6 +142,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
     shadertastic_transition_info.create = shadertastic_transition_create;
     shadertastic_transition_info.destroy = shadertastic_transition_destroy;
     shadertastic_transition_info.get_properties = shadertastic_transition_properties;
+    shadertastic_transition_info.get_defaults = shadertastic_transition_get_defaults;
     shadertastic_transition_info.update = shadertastic_transition_update;
     shadertastic_transition_info.video_tick = shadertastic_transition_tick;
     shadertastic_transition_info.video_render = shadertastic_transition_video_render;
@@ -149,7 +150,6 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
     shadertastic_transition_info.audio_render = shadertastic_transition_audio_render;
     shadertastic_transition_info.transition_start = shadertastic_transition_start;
     shadertastic_transition_info.transition_stop = shadertastic_transition_stop;
-    shadertastic_transition_info.get_defaults2 = shadertastic_transition_defaults;
     //shadertastic_transition_info.video_tick = shadertastic_transition_tick;
     shadertastic_transition_info.video_get_color_space = shadertastic_transition_get_color_space;
     obs_register_source(&shadertastic_transition_info);
@@ -188,5 +188,6 @@ bool is_module_loaded() {
 
 [[maybe_unused]] void obs_module_unload(void) {
     module_loaded = false;
+    shadertastic_filter_unload();
 }
 //----------------------------------------------------------------------------------------------------------------------
