@@ -227,7 +227,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                 }
 
                 if (texrender_ok) {
-                    selected_effect->set_params(nullptr, nullptr, s->frame_index, filter_time, s->delta_time, cx, cy, s->rand_seed);
+                    selected_effect->set_params(nullptr, nullptr, s->frame_index, false, filter_time, s->delta_time, cx, cy, s->rand_seed);
                     selected_effect->set_step_params(current_step, interm_texture);
 
                     selected_effect->main_shader->render(s->source, cx, cy);

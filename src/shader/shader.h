@@ -23,11 +23,17 @@ class effect_shader {
     gs_effect_t *gs_effect = nullptr;
 
     public:
+    // 0 -> 1 with transitions; time elapsed with filters when enabled
+    gs_eparam_t *param_time = nullptr;
+
+    // Transition only
     gs_eparam_t *param_tex_a = nullptr;
     gs_eparam_t *param_tex_b = nullptr;
+    gs_eparam_t *param_is_studio_mode = nullptr;
+
+    // Transition and filter
     gs_eparam_t *param_tex_interm = nullptr;
     gs_eparam_t *param_frame_index = nullptr;
-    gs_eparam_t *param_time = nullptr;
     gs_eparam_t *param_delta_time = nullptr;
     gs_eparam_t *param_upixel = nullptr;
     gs_eparam_t *param_vpixel = nullptr;

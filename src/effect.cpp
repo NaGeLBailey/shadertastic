@@ -145,7 +145,12 @@ void shadertastic_effect_t::reload() {
     load();
 }
 
-void shadertastic_effect_t::set_params(gs_texture_t *a, gs_texture_t *b, int frame_index, float t, float delta_t, uint32_t cx, uint32_t cy, float rand_seed) {
+void shadertastic_effect_t::set_params(
+    gs_texture_t *a, gs_texture_t *b,
+    int frame_index, bool is_studio_mode,
+    float t, float delta_t,
+    uint32_t cx, uint32_t cy,
+    float rand_seed) {
     /* texture setters look reversed, but they aren't */
     if (gs_get_color_space() == GS_CS_SRGB) {
         /* users want nonlinear effect */
@@ -159,6 +164,7 @@ void shadertastic_effect_t::set_params(gs_texture_t *a, gs_texture_t *b, int fra
     }
     //debug("input textures set");
 
+    try_gs_effect_set_bool("is_studio_mode", main_shader->param_is_studio_mode, is_studio_mode);
     try_gs_effect_set_int("frame_index", main_shader->param_frame_index, frame_index);
     try_gs_effect_set_float("time", main_shader->param_time, t);
     try_gs_effect_set_float("delta_time", main_shader->param_delta_time, delta_t);

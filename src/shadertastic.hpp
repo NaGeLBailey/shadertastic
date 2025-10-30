@@ -40,6 +40,8 @@ struct shadertastic_transition : public shadertastic_common {
     float transition_a_mul{};
     float transition_b_mul{};
 
+    float prev_t = 0.0;
+
     void release() {
         if (this->effects != nullptr) {
             for (auto& [key, effect] : *this->effects) {

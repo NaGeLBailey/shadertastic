@@ -209,7 +209,7 @@ std::vector<std::string> list_files(const char* folderPath, std::string &extensi
             }
         }
         else {
-            std::cerr << "The specified path is not a valid directory." << std::endl;
+            std::cerr << "The specified path '" << folderPath << "' is not a valid directory." << std::endl;
         }
     }
     catch (const std::exception& e) {

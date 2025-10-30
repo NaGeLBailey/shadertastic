@@ -180,6 +180,12 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
 
     shadertastic_effect_t *effect = s->selected_effect;
 
+    bool is_studio_mode = false;
+    if (s->prev_t == t) {
+        is_studio_mode = true;
+        s->frame_index--;
+    }
+
     if (effect != nullptr) {
         gs_texture_t *interm_texture = shadertastic_transparent_texture;
         struct vec4 clear_color{};
@@ -219,7 +225,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
                     GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
                     GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
                 );
-                effect->set_params(a, b, s->frame_index, t, s->delta_time, cx, cy, s->rand_seed);
+                effect->set_params(a, b, s->frame_index, is_studio_mode, t, s->delta_time, cx, cy, s->rand_seed);
                 effect->set_step_params(current_step, interm_texture);
                 effect->render_shader(cx, cy, !is_final_step && !is_saved_step);
 
@@ -240,6 +246,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
     }
 
     gs_enable_framebuffer_srgb(previous);
+    s->prev_t = t;
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -430,11 +437,18 @@ void shadertastic_transition_get_defaults(obs_data_t *settings) {
 
 void shadertastic_transition_start(void *data) {
     struct shadertastic_transition *s = shadertastic_transition_cast(data);
-    s->rand_seed = (float)((double)rand() / (double)RAND_MAX);
-    //debug("rand_seed = %f", s->rand_seed);
-
     if (!s->transition_started) {
+        s->rand_seed = (float)((double)rand() / (double)RAND_MAX);
         s->transition_started = true;
+        s->frame_index = 0;
+
+        if (s->selected_effect != nullptr) {
+            for (auto prev_frame_param : s->selected_effect->prev_frames_to_keep) {
+                if (prev_frame_param != nullptr) {
+                    prev_frame_param->reset();
+                }
+            }
+        }
 
         debug("Started transition of %s", obs_source_get_name(s->source));
     }
