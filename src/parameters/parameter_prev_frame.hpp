@@ -28,7 +28,7 @@ class effect_parameter_prev_frame : public effect_parameter {
     private:
         int step_{};
 
-        gs_texrender_t *prev_texrender[2]{};
+        gs_texrender_t *prev_texrender{};
         int prev_texrender_buffer = 0;
         gs_texture_t *prev_texture = nullptr;
         gs_texture_t *cur_texture = nullptr;
@@ -39,17 +39,10 @@ class effect_parameter_prev_frame : public effect_parameter {
         }
 
         ~effect_parameter_prev_frame() override {
-
-            if (prev_texrender[0] != nullptr) {
+            if (prev_texrender != nullptr) {
                 obs_enter_graphics();
-                gs_texrender_destroy(prev_texrender[0]);
-                prev_texrender[0] = nullptr;
-                obs_leave_graphics();
-            }
-            if (prev_texrender[1] != nullptr) {
-                obs_enter_graphics();
-                gs_texrender_destroy(prev_texrender[1]);
-                prev_texrender[1] = nullptr;
+                gs_texrender_destroy(prev_texrender);
+                prev_texrender = nullptr;
                 obs_leave_graphics();
             }
         }
@@ -68,8 +61,7 @@ class effect_parameter_prev_frame : public effect_parameter {
             step_ = (int)obs_data_get_int(metadata, "step");
 
             // FIXME faudrait ptetre pas laisser ça là, ca va en créer 10k pour rien
-            prev_texrender[0] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-            prev_texrender[1] = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
+            prev_texrender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {
@@ -93,11 +85,14 @@ class effect_parameter_prev_frame : public effect_parameter {
             try_gs_effect_set_texture(name.c_str(), shader_param, this->prev_texture);
         }
 
+        void reset() {
+            this->prev_texture = shadertastic_transparent_texture;
+        }
+
         bool attach(const uint32_t cx, const uint32_t cy, const gs_color_space source_space) {
             prev_texture = cur_texture;
-            prev_texrender_buffer = (prev_texrender_buffer + 1) & 1;
-            gs_texrender_reset(prev_texrender[prev_texrender_buffer]);
-            bool texrender_ok = gs_texrender_begin_with_color_space(prev_texrender[prev_texrender_buffer], cx, cy, source_space);
+            gs_texrender_reset(prev_texrender);
+            bool texrender_ok = gs_texrender_begin_with_color_space(prev_texrender, cx, cy, source_space);
             if (texrender_ok) {
                 struct vec4 clear_color{0,0,0,0};
                 gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
@@ -114,8 +109,8 @@ class effect_parameter_prev_frame : public effect_parameter {
             UNUSED_PARAMETER(cx);
             UNUSED_PARAMETER(cy);
             UNUSED_PARAMETER(is_srgb);
-            gs_texrender_end(prev_texrender[prev_texrender_buffer]);
-            cur_texture = gs_texrender_get_texture(prev_texrender[prev_texrender_buffer]);
+            gs_texrender_end(prev_texrender);
+            cur_texture = gs_texrender_get_texture(prev_texrender);
 
             if (cur_texture) {
                 gs_blend_state_push();
