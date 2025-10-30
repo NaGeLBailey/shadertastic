@@ -18,8 +18,14 @@
 #ifndef SHADERTASTIC_SHADER_TRANSITION_HPP
 #define SHADERTASTIC_SHADER_TRANSITION_HPP
 
+#include <obs-module.h>
+#include <QApplication>
 #include <QClipboard>
 #include <QMessageBox>
+#include "effect.h"
+#include "settings.h"
+#include "shadertastic.hpp"
+#include "shadertastic_common.hpp"
 
 obs_properties_t *shadertastic_transition_properties(void *data);
 //----------------------------------------------------------------------------------------------------------------------
@@ -48,13 +54,10 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
     char *transitions_dir_ = obs_module_file("effects");
     std::string transitions_dir(transitions_dir_);
     bfree(transitions_dir_);
-    uint8_t transparent_tex_data[2 * 2 * 4] = {0};
-    const uint8_t *transparent_tex = transparent_tex_data;
     obs_enter_graphics();
-    s->transparent_texture = gs_texture_create(2, 2, GS_RGBA, 1, &transparent_tex, 0);
-    obs_leave_graphics();
     s->transition_texrender[0] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
     s->transition_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
+    obs_leave_graphics();
 
     load_effects(s, settings, transitions_dir, "transition");
     auto effects_paths = shadertastic_settings().effects_paths;
@@ -72,7 +75,6 @@ void shadertastic_transition_destroy(void *data) {
     struct shadertastic_transition *s = static_cast<shadertastic_transition*>(data);
 
     obs_enter_graphics();
-    gs_texture_destroy(s->transparent_texture);
     gs_texrender_destroy(s->transition_texrender[0]);
     gs_texrender_destroy(s->transition_texrender[1]);
     obs_leave_graphics();
@@ -179,7 +181,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
     shadertastic_effect_t *effect = s->selected_effect;
 
     if (effect != nullptr) {
-        gs_texture_t *interm_texture = s->transparent_texture;
+        gs_texture_t *interm_texture = shadertastic_transparent_texture;
         struct vec4 clear_color{};
         vec4_zero(&clear_color);
 
@@ -273,7 +275,7 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
     }
 
     if (s->transitioning) {
-        obs_transition_video_render2(s->source, shadertastic_transition_shader_render, s->transparent_texture);
+        obs_transition_video_render2(s->source, shadertastic_transition_shader_render, shadertastic_transparent_texture);
     }
     else {
         enum obs_transition_target target = t < s->transition_point ? OBS_TRANSITION_SOURCE_A : OBS_TRANSITION_SOURCE_B;

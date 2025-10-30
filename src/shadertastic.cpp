@@ -63,6 +63,7 @@ OBS_MODULE_USE_DEFAULT_LOCALE("shadertastic", "en-US")
 //----------------------------------------------------------------------------------------------------------------------
 
 bool module_loaded = false;
+gs_texture_t *shadertastic_transparent_texture{};
 //----------------------------------------------------------------------------------------------------------------------
 
 void load_effects(shadertastic_common *s, obs_data_t *settings, const std::string &effects_dir, const std::string &effects_type) {
@@ -135,6 +136,12 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
 
     shaders_library.load();
 
+    uint8_t transparent_tex_data[2 * 2 * 4] = {0};
+    const uint8_t *transparent_tex = transparent_tex_data;
+    obs_enter_graphics();
+    shadertastic_transparent_texture = gs_texture_create(2, 2, GS_RGBA, 1, &transparent_tex, 0);
+    obs_leave_graphics();
+
     struct obs_source_info shadertastic_transition_info = {};
     shadertastic_transition_info.id = "shadertastic_transition";
     shadertastic_transition_info.type = OBS_SOURCE_TYPE_TRANSITION;
@@ -189,5 +196,12 @@ bool is_module_loaded() {
 [[maybe_unused]] void obs_module_unload(void) {
     module_loaded = false;
     shadertastic_filter_unload();
+
+    if (shadertastic_transparent_texture != nullptr) {
+        obs_enter_graphics();
+        gs_texture_destroy(shadertastic_transparent_texture);
+        obs_leave_graphics();
+        shadertastic_transparent_texture = nullptr;
+    }
 }
 //----------------------------------------------------------------------------------------------------------------------

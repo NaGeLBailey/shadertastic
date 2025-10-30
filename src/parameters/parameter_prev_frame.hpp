@@ -20,6 +20,7 @@
 
 #include <string>
 #include "parameter.hpp"
+#include "../shadertastic_common.hpp"
 #include "../util/string_util.h"
 #include "../util/file_util.h"
 
@@ -34,7 +35,7 @@ class effect_parameter_prev_frame : public effect_parameter {
 
     public:
         explicit effect_parameter_prev_frame(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
-            this->prev_texture = nullptr;
+            this->prev_texture = shadertastic_transparent_texture;
         }
 
         ~effect_parameter_prev_frame() override {

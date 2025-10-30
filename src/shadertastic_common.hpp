@@ -1,5 +1,5 @@
-#ifndef SHADERTASTIC_COMMON_H
-#define SHADERTASTIC_COMMON_H
+#ifndef SHADERTASTIC_COMMON_HPP
+#define SHADERTASTIC_COMMON_HPP
 
 #include <map>
 #include <string>
@@ -7,6 +7,7 @@
 
 struct shadertastic_effect_t;
 typedef std::map<std::string, shadertastic_effect_t> shadertastic_effects_map_t;
+extern gs_texture_t *shadertastic_transparent_texture;
 
 struct shadertastic_common {
     shadertastic_effects_map_t *effects{};
@@ -21,4 +22,4 @@ struct shadertastic_common {
 };
 //----------------------------------------------------------------------------------------------------------------------
 
-#endif // SHADERTASTIC_COMMON_H
+#endif // SHADERTASTIC_COMMON_HPP

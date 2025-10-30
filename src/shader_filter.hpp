@@ -196,7 +196,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
         if (selected_effect->input_facedetection && s->face_tracking.created) {
             face_tracking_tick(&s->face_tracking, target_source, s->delta_time);
         }
-        gs_texture_t *interm_texture = s->transparent_texture;
+        gs_texture_t *interm_texture = shadertastic_transparent_texture;
         if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
             gs_blend_state_push();
             gs_blend_function_separate(
