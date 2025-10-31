@@ -77,22 +77,45 @@ static inline void render_filter_texture(gs_texture_t *source_tex, gs_effect_t *
 }
 //----------------------------------------------------------------------------------------------------------------------
 
+gs_effect_t *FaceTrackingCropShader::gs_crop_effect = nullptr;
+gs_eparam_t *FaceTrackingCropShader::gs_crop_param_center = nullptr;
+gs_eparam_t *FaceTrackingCropShader::gs_crop_param_crop_size = nullptr;
+gs_eparam_t *FaceTrackingCropShader::gs_crop_param_rotation = nullptr;
+gs_eparam_t *FaceTrackingCropShader::gs_crop_param_aspect_ratio = nullptr;
+
+void FaceTrackingCropShader::init() {
+    obs_enter_graphics();
+    {
+        // Crop effect for the mesh model
+        char *crop192_path = obs_module_file("effects/crop192.hlsl");
+        FaceTrackingCropShader::gs_crop_effect = gs_effect_create_from_file(crop192_path, nullptr);
+        bfree(crop192_path);
+
+        FaceTrackingCropShader::gs_crop_param_center = gs_effect_get_param_by_name(FaceTrackingCropShader::gs_crop_effect, "center");
+        FaceTrackingCropShader::gs_crop_param_crop_size = gs_effect_get_param_by_name(FaceTrackingCropShader::gs_crop_effect, "crop_size");
+        FaceTrackingCropShader::gs_crop_param_rotation = gs_effect_get_param_by_name(FaceTrackingCropShader::gs_crop_effect, "rotation");
+        FaceTrackingCropShader::gs_crop_param_aspect_ratio = gs_effect_get_param_by_name(FaceTrackingCropShader::gs_crop_effect, "aspect_ratio");
+    }
+    obs_leave_graphics();
+}
+void FaceTrackingCropShader::release() {
+    obs_enter_graphics();
+    {
+        if (FaceTrackingCropShader::gs_crop_effect != nullptr) {
+            gs_effect_destroy(FaceTrackingCropShader::gs_crop_effect);
+            FaceTrackingCropShader::gs_crop_effect = nullptr;
+        }
+    }
+    obs_leave_graphics();
+}
+//----------------------------------------------------------------------------------------------------------------------
+
 FaceTrackingCropShader::FaceTrackingCropShader() {
     obs_enter_graphics();
     {
         this->source_texrender = gs_texrender_create(GS_RGBA32F, GS_ZS_NONE);
         this->crop_texrender = gs_texrender_create(GS_RGBA32F, GS_ZS_NONE);
-
-        // Crop effect for the mesh model
-        char *crop192_path = obs_module_file("effects/crop192.hlsl");
-        this->gs_crop_effect = gs_effect_create_from_file(crop192_path, nullptr);
-        bfree(crop192_path);
-
-        //gs_crop_param_top_left
-        this->gs_crop_param_center = gs_effect_get_param_by_name(this->gs_crop_effect, "center");
-        this->gs_crop_param_crop_size = gs_effect_get_param_by_name(this->gs_crop_effect, "crop_size");
-        this->gs_crop_param_rotation = gs_effect_get_param_by_name(this->gs_crop_effect, "rotation");
-        this->gs_crop_param_aspect_ratio = gs_effect_get_param_by_name(this->gs_crop_effect, "aspect_ratio");
+        this->staging_texture = gs_stagesurface_create(192, 192, GS_RGBA32F);
     }
     obs_leave_graphics();
 }
@@ -103,10 +126,6 @@ FaceTrackingCropShader::~FaceTrackingCropShader() {
         if (this->staging_texture) {
             gs_stagesurface_destroy(this->staging_texture);
             this->staging_texture = nullptr;
-        }
-        if (this->gs_crop_effect) {
-            gs_effect_destroy(this->gs_crop_effect);
-            this->gs_crop_effect = nullptr;
         }
         if (this->crop_texrender) {
             gs_texrender_destroy(this->crop_texrender);
@@ -121,6 +140,7 @@ FaceTrackingCropShader::~FaceTrackingCropShader() {
 }
 
 cv::Mat FaceTrackingCropShader::getCroppedImage(obs_source_t *target_source, float2 &roi_center, float2 &roi_size, float rotation) {
+    cv::Mat failed(0, 0, CV_32FC4);
     const enum gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
         GS_CS_SRGB_16F,
@@ -135,15 +155,7 @@ cv::Mat FaceTrackingCropShader::getCroppedImage(obs_source_t *target_source, flo
     gs_texture_t *source_tex = prepare_source_texture(this->source_texrender, target_source, cx, cy, source_space);
 
     if (source_tex == nullptr) {
-        cv::Mat failed(0, 0, CV_32FC4);
         return failed;
-    }
-
-    if (!this->staging_texture || gs_stagesurface_get_width(this->staging_texture) != 192 || gs_stagesurface_get_height(this->staging_texture) != 192) {
-        if (this->staging_texture) {
-            gs_stagesurface_destroy(this->staging_texture);
-        }
-        this->staging_texture = gs_stagesurface_create(192, 192, GS_RGBA32F);
     }
 
     gs_texrender_reset(this->crop_texrender);
@@ -159,10 +171,10 @@ cv::Mat FaceTrackingCropShader::getCroppedImage(obs_source_t *target_source, flo
             .x=roi_size.x,
             .y=roi_size.y,
         };
-        try_gs_effect_set_vec2("center", this->gs_crop_param_center, &center);
-        try_gs_effect_set_vec2("crop_size", this->gs_crop_param_crop_size, &crop_size);
-        try_gs_effect_set_float("rotation", this->gs_crop_param_rotation, rotation);
-        try_gs_effect_set_float("aspect_ratio", this->gs_crop_param_aspect_ratio, aspect_ratio);
+        try_gs_effect_set_vec2("center", FaceTrackingCropShader::gs_crop_param_center, &center);
+        try_gs_effect_set_vec2("crop_size", FaceTrackingCropShader::gs_crop_param_crop_size, &crop_size);
+        try_gs_effect_set_float("rotation", FaceTrackingCropShader::gs_crop_param_rotation, rotation);
+        try_gs_effect_set_float("aspect_ratio", FaceTrackingCropShader::gs_crop_param_aspect_ratio, aspect_ratio);
 
         gs_blend_state_push();
         gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
@@ -192,10 +204,8 @@ cv::Mat FaceTrackingCropShader::getCroppedImage(obs_source_t *target_source, flo
         }
         else {
             debug("cpt2");
-            cv::Mat failed(0, 0, CV_32FC4);
             return failed;
         }
     }
-    cv::Mat failed(0, 0, CV_32FC4);
     return failed;
 }

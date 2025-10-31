@@ -24,11 +24,8 @@
 #include <obs-frontend-api.h>
 
 #include <QAction>
-#include <QApplication>
 #include <QCheckBox>
-#include <QDialog>
 #include <QFileDialog>
-#include <QFormLayout>
 #include <QFrame>
 #include <QLabel>
 #include <QLineEdit>
@@ -37,7 +34,6 @@
 #include <QVBoxLayout>
 #include <QDoubleSpinBox>
 #include <util/platform.h>
-#define QT_UTF8(str) QString::fromUtf8(str, -1)
 
 #include "version.h"
 
@@ -134,6 +130,8 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
     apply_settings(settings);
     obs_data_release(settings);
 
+    FaceTrackingCropShader::init();
+
     shaders_library.load();
 
     uint8_t transparent_tex_data[2 * 2 * 4] = {0};
@@ -203,5 +201,7 @@ bool is_module_loaded() {
         obs_leave_graphics();
         shadertastic_transparent_texture = nullptr;
     }
+
+    FaceTrackingCropShader::release();
 }
 //----------------------------------------------------------------------------------------------------------------------

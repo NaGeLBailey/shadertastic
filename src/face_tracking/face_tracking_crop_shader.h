@@ -28,13 +28,15 @@ private:
     gs_texrender_t *source_texrender;
     gs_texrender_t *crop_texrender;
     gs_stagesurf_t *staging_texture = nullptr;
-    gs_effect_t *gs_crop_effect = nullptr;
-    gs_eparam_t *gs_crop_param_center = nullptr;
-    gs_eparam_t *gs_crop_param_crop_size = nullptr;
-    gs_eparam_t *gs_crop_param_rotation = nullptr;
-    gs_eparam_t *gs_crop_param_aspect_ratio = nullptr;
+    static gs_effect_t *gs_crop_effect;
+    static gs_eparam_t *gs_crop_param_center;
+    static gs_eparam_t *gs_crop_param_crop_size;
+    static gs_eparam_t *gs_crop_param_rotation;
+    static gs_eparam_t *gs_crop_param_aspect_ratio;
 
 public:
+    static void init();
+    static void release();
     FaceTrackingCropShader();
     ~FaceTrackingCropShader();
 
