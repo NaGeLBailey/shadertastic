@@ -8,7 +8,7 @@ set(CUSTOM_ONNXRUNTIME_HASH
     ""
     CACHE STRING "Hash of a downloaded ONNX Runtime tarball")
 
-set(Onnxruntime_VERSION "1.17.1")
+set(Onnxruntime_VERSION "1.23.2")
 
 if(CUSTOM_ONNXRUNTIME_URL STREQUAL "")
   set(USE_PREDEFINED_ONNXRUNTIME ON)
@@ -22,9 +22,9 @@ endif()
 
 if(USE_PREDEFINED_ONNXRUNTIME)
   set(Onnxruntime_BASEURL "https://github.com/microsoft/onnxruntime/releases/download/v${Onnxruntime_VERSION}")
-  set(Onnxruntime_WINDOWS_VERSION "v${Onnxruntime_VERSION}-1")
+  set(Onnxruntime_WINDOWS_VERSION "v${Onnxruntime_VERSION}-0")
   set(Onnxruntime_WINDOWS_BASEURL
-      "https://github.com/occ-ai/occ-ai-dep-onnxruntime-static-win/releases/download/${Onnxruntime_WINDOWS_VERSION}")
+      "https://github.com/xurei/onnxruntime-static-win/releases/download/${Onnxruntime_WINDOWS_VERSION}")
 
   if(APPLE)
     set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-osx-universal2-${Onnxruntime_VERSION}.tgz")
