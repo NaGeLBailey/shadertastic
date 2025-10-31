@@ -10,12 +10,7 @@ uniform int current_step;      // index of current step (for multistep effects)
 */
 
 // Specific parameters of the shader. They must be defined in the meta.json file next to this one.
-uniform float2 fd_leye_1;
-uniform float2 fd_leye_2;
-uniform float2 fd_reye_1;
-uniform float2 fd_reye_2;
-uniform float2 fd_face_1;
-uniform float2 fd_face_2;
+uniform bool fd_face_found;
 uniform texture2d fd_points_tex;
 
 uniform float audio_level;
@@ -255,11 +250,11 @@ float audio_effect_level_with_impact() {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-float eyesColoration(float2 uv, float2 fd_eye_1, float2 fd_eye_2, float eyeIntensity, float eye_seed) {
+float eyesColoration(float2 uv, float2 fd_eye_center, float fd_eye_radius, float eyeIntensity, float eye_seed) {
     float aspectRatio = vpixel/upixel;
     float2 orthoCorrection = float2(aspectRatio, 1.0);
 
-    float2 position = (fd_eye_1 + fd_eye_2) * orthoCorrection / 2.0;
+    float2 position = fd_eye_center * orthoCorrection;
     float2 uvOrthonormal = uv * orthoCorrection;
     float2 uvLocal = uvOrthonormal - position;
 
@@ -271,9 +266,7 @@ float eyesColoration(float2 uv, float2 fd_eye_1, float2 fd_eye_2, float eyeInten
     float audio_level_mult = audio_effect_level2;
 
     if (best_triangle[0] > -1) {
-        float2 fd_eye_center = ((fd_eye_1 + fd_eye_2) / 2.0) * (orthoCorrection);
-        float fd_eye_radius = abs(fd_eye_1.y - fd_eye_center.y) * 1.20;
-        float iris_dist = distance(uvOrthonormal, fd_eye_center);
+        float iris_dist = distance(uvOrthonormal, position);
         float pupil_radius = fd_eye_radius * 0.5;
 
         float angle = atan2(uvLocal.y, uvLocal.x);
@@ -298,13 +291,12 @@ float eyesColoration(float2 uv, float2 fd_eye_1, float2 fd_eye_2, float eyeInten
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-float laserIntensity(float2 uv, float2 fd_eye_1, float2 fd_eye_2, float width, float eyes_dist, float compress_ratio_v) {
+float laserIntensity(float2 uv, float2 fd_eye_center, float width, float eyes_dist, float compress_ratio_v) {
     float aspectRatio = vpixel/upixel;
     float2 orthoCorrection = float2(aspectRatio, 1.0) / eyes_dist;
 
     float2 uvOrthonormal = uv * orthoCorrection;
-    float2 position = (fd_eye_1 + fd_eye_2) * orthoCorrection / 2.0;
-    float2 eye_dimensions = abs(fd_eye_2-fd_eye_1);
+    float2 position = fd_eye_center * orthoCorrection;
 
     float2 uvLocal = uvOrthonormal - position;
     float uvLocalLength = length(uvLocal);
@@ -353,8 +345,13 @@ float laserRay(float2 uv, float2 lineStart, float2 direction) {
 //----------------------------------------------------------------------------------------------------------------------
 
 float4 EffectLinear__step0(float2 uv) {
-    float2 positionL = (fd_leye_1 + fd_leye_2) / 2.0;
-    float2 positionR = (fd_reye_1 + fd_reye_2) / 2.0;
+    float2 positionL = fd_points_tex.Sample(pointsSampler, float2((468.5)/478.0, 0)).xy;
+    float2 positionR = fd_points_tex.Sample(pointsSampler, float2((473.5)/478.0, 0)).xy;
+
+    float2 fd_leye_top = fd_points_tex.Sample(pointsSampler, float2((470.5)/478.0, 0)).xy;
+    float fd_leye_radius = abs(positionL.y - fd_leye_top.y);
+    float2 fd_reye_top = fd_points_tex.Sample(pointsSampler, float2((475.5)/478.0, 0)).xy;
+    float fd_reye_radius = abs(positionR.y - fd_reye_top.y);
 
     float eye_intensity = 2.0;
     eye_intensity *= eye_intensity_ratio;
@@ -364,8 +361,8 @@ float4 EffectLinear__step0(float2 uv) {
     }
 
     float intensityOfEyes = (
-          eyesColoration(uv, fd_leye_1, fd_leye_2, eye_intensity, 1.344)
-        + eyesColoration(uv, fd_reye_1, fd_reye_2, eye_intensity, 2.04)
+          eyesColoration(uv, positionL, fd_leye_radius, eye_intensity, 1.344)
+        + eyesColoration(uv, positionR, fd_reye_radius, eye_intensity, 2.04)
     );
 
     float4 px = float4(0.0, 0.0, 0.0, 0.0);
@@ -410,19 +407,19 @@ float4 EffectLinear__step3(float2 uv) {
         return ppx;
     }
 
-    if (fd_leye_1.x < 0.0) {
+    if (!fd_face_found) {
         return image.Sample(textureSampler, uv);
     }
     float4 px_interm = tex_interm.Sample(textureSampler, uv);
 
-    float2 positionL = (fd_leye_1 + fd_leye_2) / 2.0;
-    float2 positionR = (fd_reye_1 + fd_reye_2) / 2.0;
+    float2 positionL = fd_points_tex.Sample(pointsSampler, float2((468.5)/478.0, 0)).xy; //(fd_leye_1 + fd_leye_2) / 2.0;
+    float2 positionR = fd_points_tex.Sample(pointsSampler, float2((473.5)/478.0, 0)).xy;
 
     float intensityOfLaser = (
-          laserIntensity(uv, fd_leye_1, fd_leye_2, flare_width, distance(positionL, positionR), 30.0 * sqrt(flare_width/0.3))
-        + laserIntensity(uv, fd_reye_1, fd_reye_2, flare_width, distance(positionL, positionR), 30.0 * sqrt(flare_width/0.3))
-        + 0.5 * laserIntensity(uv, fd_leye_1, fd_leye_2, 0.6, distance(positionL, positionR), 1.7)
-        + 0.5 * laserIntensity(uv, fd_reye_1, fd_reye_2, 0.6, distance(positionL, positionR), 1.7)
+          laserIntensity(uv, positionL, flare_width, distance(positionL, positionR), 30.0 * sqrt(flare_width/0.3))
+        + laserIntensity(uv, positionR, flare_width, distance(positionL, positionR), 30.0 * sqrt(flare_width/0.3))
+        + 0.5 * laserIntensity(uv, positionL, 0.6, distance(positionL, positionR), 1.7)
+        + 0.5 * laserIntensity(uv, positionR, 0.6, distance(positionL, positionR), 1.7)
     );
 
     float4 px = image.Sample(textureSampler, uv);

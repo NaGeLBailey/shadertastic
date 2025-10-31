@@ -23,7 +23,7 @@
 #include "shader.h"
 
 effect_shader::~effect_shader() {
-    debug("DELETE effect_shader %s", path.c_str());
+    //debug("DELETE effect_shader %s", path.c_str());
     this->release();
 }
 
@@ -85,12 +85,8 @@ bool effect_shader::load(const char *shader_path) {
             param_nb_steps = gs_effect_get_param_by_name(gs_effect, "nb_steps");
 
             param_fd_face_found = gs_effect_get_param_by_name(gs_effect, "fd_face_found");
-            param_fd_leye_1 = gs_effect_get_param_by_name(gs_effect, "fd_leye_1");
-            param_fd_leye_2 = gs_effect_get_param_by_name(gs_effect, "fd_leye_2");
-            param_fd_reye_1 = gs_effect_get_param_by_name(gs_effect, "fd_reye_1");
-            param_fd_reye_2 = gs_effect_get_param_by_name(gs_effect, "fd_reye_2");
-            param_fd_face_1 = gs_effect_get_param_by_name(gs_effect, "fd_face_1");
-            param_fd_face_2 = gs_effect_get_param_by_name(gs_effect, "fd_face_2");
+            param_fd_face_tl = gs_effect_get_param_by_name(gs_effect, "fd_face_tl");
+            param_fd_face_br = gs_effect_get_param_by_name(gs_effect, "fd_face_br");
             param_fd_points_tex = gs_effect_get_param_by_name(gs_effect, "fd_points_tex");
 
             return true;

@@ -10,12 +10,9 @@ uniform int current_step;      // index of current step (for multistep effects)
 */
 
 // Specific parameters of the shader. They must be defined in the meta.json file next to this one.
-uniform float2 fd_leye_1;
-uniform float2 fd_leye_2;
-uniform float2 fd_reye_1;
-uniform float2 fd_reye_2;
-uniform float2 fd_face_1;
-uniform float2 fd_face_2;
+uniform bool fd_face_found;
+uniform float2 fd_face_tl;
+uniform float2 fd_face_br;
 uniform texture2d fd_points_tex;
 uniform bool show_tex;
 uniform bool show_mesh_face;
@@ -69,20 +66,22 @@ float4 EffectLinear(float2 uv)
     float2 uv_ortho = uv * orthoCorrection;
 
     if (show_eyes) {
-        float2 fd_leye_center = ((fd_leye_1 + fd_leye_2) / 2.0) * orthoCorrection;
-        float fd_leye_radius = abs(fd_leye_1.y - fd_leye_center.y);
+        float2 fd_leye_center = fd_points_tex.Sample(pointsSampler, float2((468.5)/478.0, 0)).xy * orthoCorrection;
+        float2 fd_leye_top = fd_points_tex.Sample(pointsSampler, float2((470.5)/478.0, 0)).xy * orthoCorrection;
+        float fd_leye_radius = abs(fd_leye_center.y - fd_leye_top.y);
         if (distance(uv_ortho, fd_leye_center) < fd_leye_radius) {
             return lerp(px, float4(1.0, 0.0, 0.0, 1.0), 0.4);
         }
 
-        float2 fd_reye_center = ((fd_reye_1 + fd_reye_2) / 2.0) * orthoCorrection;
-        float fd_reye_radius = abs(fd_reye_1.y - fd_reye_center.y);
+        float2 fd_reye_center = fd_points_tex.Sample(pointsSampler, float2((473.5)/478.0, 0)).xy * orthoCorrection;
+        float2 fd_reye_top = fd_points_tex.Sample(pointsSampler, float2((475.5)/478.0, 0)).xy * orthoCorrection;
+        float fd_reye_radius = abs(fd_reye_center.y - fd_reye_top.y);
         if (distance(uv_ortho, fd_reye_center) < fd_reye_radius) {
             return lerp(px, float4(1.0, 1.0, 0.0, 1.0), 0.4);
         }
     }
 
-    if (fd_face_1.x - upixel <= uv.x && uv.x <= fd_face_2.x + upixel && fd_face_1.y - vpixel <= uv.y && uv.y <= fd_face_2.y + vpixel) {
+    if (fd_face_tl.x - upixel <= uv.x && uv.x <= fd_face_br.x + upixel && fd_face_tl.y - vpixel <= uv.y && uv.y <= fd_face_br.y + vpixel) {
         mult = float4(0.95, 0.95, 0.95, 1.0);
 
         #ifdef _D3D11
@@ -99,9 +98,9 @@ float4 EffectLinear(float2 uv)
                 i > 467
             );
 
-            if (isEyes) {
+            /*if (isEyes) {
                 continue;
-            }
+            }*/
 
             bool isLips = (
                 i == 0 ||

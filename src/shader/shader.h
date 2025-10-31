@@ -42,12 +42,8 @@ class effect_shader {
     gs_eparam_t *param_nb_steps = nullptr;
 
     gs_eparam_t *param_fd_face_found = nullptr;
-    gs_eparam_t *param_fd_leye_1 = nullptr;
-    gs_eparam_t *param_fd_leye_2 = nullptr;
-    gs_eparam_t *param_fd_reye_1 = nullptr;
-    gs_eparam_t *param_fd_reye_2 = nullptr;
-    gs_eparam_t *param_fd_face_1 = nullptr;
-    gs_eparam_t *param_fd_face_2 = nullptr;
+    gs_eparam_t *param_fd_face_tl = nullptr;
+    gs_eparam_t *param_fd_face_br = nullptr;
     gs_eparam_t *param_fd_points_tex = nullptr;
 
     std::string path;
