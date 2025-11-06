@@ -1,0 +1,70 @@
+name: Build Dependencies
+on:
+  workflow_call:
+    outputs:
+      pluginName:
+        description: Project name detected by parsing build spec file
+        value: ${{ jobs.check-event.outputs.pluginName }}
+
+jobs:
+  ubuntu-build:
+    name: Build for Ubuntu 🐧
+    strategy:
+      matrix:
+        os: [ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: "Checkout plugin"
+        uses: actions/checkout@v4.1.4
+        with:
+          path: plugins/${{ env.PLUGIN_NAME }}
+          submodules: 'recursive'
+      - name: "libzip: Information"
+        shell: bash
+        id: libzip-info
+        run: |
+          cd "${PWD}/plugins/${{ env.PLUGIN_NAME}}/vendor/libzip/"
+          git fetch --all
+          version=$(git describe --tags --long --abbrev=8 HEAD)
+          echo "libzip: ${version}"
+          echo "version=${version}" >> $GITHUB_OUTPUT
+      - name: "libzip: Cache"
+        uses: actions/cache/restore@v3
+        id: libzip-cache
+        with:
+          path: |
+            build/libzip/distrib
+          key: libzip-linux-${{steps.libzip-info.outputs.version}}
+      - name: "libzip: Configure"
+        if: "(steps.libzip-cache.outputs.cache-hit != 'true')"
+        shell: bash
+        run: |
+          cmake -Hplugins/${{ env.PLUGIN_NAME}}/vendor/libzip -Bbuild/libzip/build \
+            -DCMAKE_INSTALL_PREFIX=build/libzip/distrib \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_BZIP2=OFF \
+            -DENABLE_LZMA=OFF \
+            -DENABLE_COMMONCRYPTO=OFF \
+            -DENABLE_GNUTLS=OFF \
+            -DENABLE_MBEDTLS=OFF \
+            -DENABLE_OPENSSL=OFF \
+            -DENABLE_WINDOWS_CRYPTO=OFF \
+            -DBUILD_DOC=OFF \
+            -DBUILD_EXAMPLES=OFF \
+            -DBUILD_REGRESS=OFF \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DBUILD_TOOLS=OFF
+      - name: "libzip: Build"
+        if: "(steps.libzip-cache.outputs.cache-hit != 'true')"
+        shell: bash
+        run: |
+          cmake --build build/libzip/build --config Release --target install
+      - name: "libzip: Save Cache"
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            build/libzip/distrib
+          key: libzip-linux-${{steps.libzip-info.outputs.version}}

@@ -35,9 +35,11 @@ set(
   \\.github/
   \\.gitignore
   \\.ccache/
+  debug_logs/
   build_.*
   cmake/\\.CMakeBuildNumber
   release/
+  \\.mp4
 )
 
 set(CPACK_VERBATIM_VARIABLES YES)
