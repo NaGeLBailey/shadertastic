@@ -4,6 +4,16 @@
 
 # Generated files
 src/version.h
+node_modules/
+
+# Exclude lock files
+*.lock.json
+
+# Exclude macOS legacy resource forks
+.DS_Store
+
+# Exclude CMake build number cache
+/cmake/.CMakeBuildNumber
 
 # Lab files
 lab/
@@ -12,6 +22,7 @@ lab/
 cmake-build-*/
 build/
 build-prod/
+build_*/
 
 # Development files
 *.mp4
@@ -21,3 +32,4 @@ build.sh
 build_dev.sh
 test.sh
 debug_logs/
+/CMakeUserPresets.json

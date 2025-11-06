@@ -1,0 +1,34 @@
+{
+  "description": "This is a template for local builds. It adds a DEV_MODE flag to enable debug logging.",
+  "version": 8,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "ubuntu-debug-x86_64",
+      "inherits": ["ubuntu-x86_64"],
+      "displayName": "Ubuntu x86_64 (Debug Mode)",
+      "description": "Build for Ubuntu x86_64 with debug and dev mode enabled",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_COMPILE_WARNING_AS_ERROR": true,
+        "ENABLE_CCACHE": true,
+        "SHADERTASTIC_COMMIT": "localbuild",
+        "DEV_MODE": true,
+        "DEV_LOG_PATH": "/tmp/shadertastic_debug_logs"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "ubuntu-debug-x86_64",
+      "configurePreset": "ubuntu-debug-x86_64",
+      "displayName": "Ubuntu x86_64 (Debug Mode)",
+      "description": "Ubuntu build for x86_64 (Debug Mode)",
+      "configuration": "Debug"
+    }
+  ]
+}

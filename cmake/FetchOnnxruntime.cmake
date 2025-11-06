@@ -1,52 +1,29 @@
 include(FetchContent)
 
-set(CUSTOM_ONNXRUNTIME_URL
-    ""
+set(CUSTOM_ONNXRUNTIME_URL ""
     CACHE STRING "URL of a downloaded ONNX Runtime tarball")
 
-set(CUSTOM_ONNXRUNTIME_HASH
-    ""
+set(CUSTOM_ONNXRUNTIME_HASH ""
     CACHE STRING "Hash of a downloaded ONNX Runtime tarball")
 
 set(Onnxruntime_VERSION "1.23.2")
 
-if(CUSTOM_ONNXRUNTIME_URL STREQUAL "")
-  set(USE_PREDEFINED_ONNXRUNTIME ON)
-else()
-  if(CUSTOM_ONNXRUNTIME_HASH STREQUAL "")
-    message(FATAL_ERROR "Both of CUSTOM_ONNXRUNTIME_URL and CUSTOM_ONNXRUNTIME_HASH must be present!")
-  else()
-    set(USE_PREDEFINED_ONNXRUNTIME OFF)
-  endif()
-endif()
+set(Onnxruntime_BASEURL "https://github.com/microsoft/onnxruntime/releases/download/v${Onnxruntime_VERSION}")
 
-if(USE_PREDEFINED_ONNXRUNTIME)
-  set(Onnxruntime_BASEURL "https://github.com/microsoft/onnxruntime/releases/download/v${Onnxruntime_VERSION}")
-  set(Onnxruntime_WINDOWS_VERSION "v${Onnxruntime_VERSION}-0")
-  set(Onnxruntime_WINDOWS_BASEURL
-      "https://github.com/xurei/onnxruntime-static-win/releases/download/${Onnxruntime_WINDOWS_VERSION}")
-
-  if(APPLE)
-    set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-osx-universal2-${Onnxruntime_VERSION}.tgz")
-    set(Onnxruntime_HASH SHA256=9FA57FA6F202A373599377EF75064AE568FDA8DA838632B26A86024C7378D306)
-  elseif(MSVC)
-    message("${Onnxruntime_WINDOWS_BASEURL}/onnxruntime-windows-${Onnxruntime_WINDOWS_VERSION}-Release.zip")
-    set(Onnxruntime_URL "${Onnxruntime_WINDOWS_BASEURL}/onnxruntime-windows-${Onnxruntime_WINDOWS_VERSION}-Release.zip")
-    set(OOnnxruntime_HASH SHA256=39E63850D9762810161AE1B4DEAE5E3C02363521273E4B894A9D9707AB626C38)
-  else()
-    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
-      set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-linux-aarch64-${Onnxruntime_VERSION}.tgz")
-      set(Onnxruntime_HASH SHA256=70B6F536BB7AB5961D128E9DBD192368AC1513BFFB74FE92F97AAC342FBD0AC1)
-    else()
-      set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-linux-x64-${Onnxruntime_VERSION}.tgz")
-      set(Onnxruntime_HASH SHA256=89b153af88746665909c758a06797175ae366280cbf25502c41eb5955f9a555e)
-      #set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-linux-x64-gpu-${Onnxruntime_VERSION}.tgz")
-      #set(Onnxruntime_HASH SHA256=613C53745EA4960ED368F6B3AB673558BB8561C84A8FA781B4EA7FB4A4340BE4)
-    endif()
-  endif()
+if(APPLE)
+  set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-osx-universal2-${Onnxruntime_VERSION}.tgz")
+  set(Onnxruntime_HASH SHA256=9FA57FA6F202A373599377EF75064AE568FDA8DA838632B26A86024C7378D306)
+elseif(MSVC)
+  set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-win-x64-${Onnxruntime_VERSION}.zip")
+  set(OOnnxruntime_HASH SHA256=0b38df9af21834e41e73d602d90db5cb06dbd1ca618948b8f1d66d607ac9f3cd)
 else()
-  set(Onnxruntime_URL "${CUSTOM_ONNXRUNTIME_URL}")
-  set(Onnxruntime_HASH "${CUSTOM_ONNXRUNTIME_HASH}")
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+    set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-linux-aarch64-${Onnxruntime_VERSION}.tgz")
+    set(Onnxruntime_HASH SHA256=70B6F536BB7AB5961D128E9DBD192368AC1513BFFB74FE92F97AAC342FBD0AC1)
+  else()
+    set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-linux-x64-${Onnxruntime_VERSION}.tgz")
+    set(Onnxruntime_HASH SHA256=1fa4dcaef22f6f7d5cd81b28c2800414350c10116f5fdd46a2160082551c5f9b) # 1.23.2
+  endif()
 endif()
 
 set(FETCHCONTENT_QUIET FALSE)
@@ -72,34 +49,44 @@ if(APPLE)
       "@loader_path/../Frameworks/libonnxruntime.${Onnxruntime_VERSION}.dylib" $<TARGET_FILE:${PROJECT_NAME}>)
 elseif(MSVC)
   add_library(Ort INTERFACE)
-  set(Onnxruntime_LIB_NAMES
-      session;providers_shared;providers_dml;optimizer;providers;framework;graph;util;mlas;common;flatbuffers)
-  foreach(lib_name IN LISTS Onnxruntime_LIB_NAMES)
-    add_library(Ort::${lib_name} STATIC IMPORTED)
-    set_target_properties(Ort::${lib_name} PROPERTIES IMPORTED_LOCATION
-                                                      ${onnxruntime_SOURCE_DIR}/lib/onnxruntime_${lib_name}.lib)
-    set_target_properties(Ort::${lib_name} PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${onnxruntime_SOURCE_DIR}/include)
-    target_link_libraries(Ort INTERFACE Ort::${lib_name})
-  endforeach()
+  target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${onnxruntime_SOURCE_DIR}/include")
 
+  target_link_libraries(${PROJECT_NAME} PRIVATE "${onnxruntime_SOURCE_DIR}/lib/onnxruntime.lib")
+  target_link_libraries(${PROJECT_NAME} PRIVATE "${onnxruntime_SOURCE_DIR}/lib/onnxruntime_providers_shared.lib")
+
+#  set(Onnxruntime_LIB_NAMES
+#      session;providers_shared;providers_dml;optimizer;providers;framework;graph;util;mlas;common;flatbuffers)
+#  set(Onnxruntime_LIB_NAMES
+#          onnxruntime;onnxruntime_providers_shared)
+#  foreach(lib_name IN LISTS Onnxruntime_LIB_NAMES)
+#    add_library(Ort::${lib_name} STATIC IMPORTED)
+#    set_target_properties(Ort::${lib_name} PROPERTIES IMPORTED_LOCATION
+#                                                      ${onnxruntime_SOURCE_DIR}/lib/onnxruntime_${lib_name}.lib)
+#    set_target_properties(Ort::${lib_name} PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${onnxruntime_SOURCE_DIR}/include)
+#    target_link_libraries(Ort INTERFACE Ort::${lib_name})
+#  endforeach()
+
+#  set(Onnxruntime_EXTERNAL_LIB_NAMES
+#          onnx;onnx_proto;libprotobuf-lite;re2;absl_throw_delegate;absl_hash;absl_city;absl_low_level_hash;absl_raw_hash_set
+#  )
   set(Onnxruntime_EXTERNAL_LIB_NAMES
-      onnx;onnx_proto;libprotobuf-lite;re2;absl_throw_delegate;absl_hash;absl_city;absl_low_level_hash;absl_raw_hash_set
+          onnxruntime;onnxruntime_providers_shared
   )
-  foreach(lib_name IN LISTS Onnxruntime_EXTERNAL_LIB_NAMES)
-    add_library(Ort::${lib_name} STATIC IMPORTED)
-    set_target_properties(Ort::${lib_name} PROPERTIES IMPORTED_LOCATION ${onnxruntime_SOURCE_DIR}/lib/${lib_name}.lib)
-    target_link_libraries(Ort INTERFACE Ort::${lib_name})
-  endforeach()
+#  foreach(lib_name IN LISTS Onnxruntime_EXTERNAL_LIB_NAMES)
+#    add_library(Ort::${lib_name} STATIC IMPORTED)
+#    set_target_properties(Ort::${lib_name} PROPERTIES IMPORTED_LOCATION ${onnxruntime_SOURCE_DIR}/lib/${lib_name}.lib)
+#    target_link_libraries(Ort INTERFACE Ort::${lib_name})
+#  endforeach()
 
-  add_library(Ort::DirectML SHARED IMPORTED)
-  set_target_properties(Ort::DirectML PROPERTIES IMPORTED_LOCATION ${onnxruntime_SOURCE_DIR}/bin/DirectML.dll)
-  set_target_properties(Ort::DirectML PROPERTIES IMPORTED_IMPLIB ${onnxruntime_SOURCE_DIR}/bin/DirectML.lib)
+#  add_library(Ort::DirectML SHARED IMPORTED)
+#  set_target_properties(Ort::DirectML PROPERTIES IMPORTED_LOCATION ${onnxruntime_SOURCE_DIR}/bin/DirectML.dll)
+#  set_target_properties(Ort::DirectML PROPERTIES IMPORTED_IMPLIB ${onnxruntime_SOURCE_DIR}/bin/DirectML.lib)
+#
+#  target_link_libraries(Ort INTERFACE Ort::DirectML d3d12.lib dxgi.lib dxguid.lib Dxcore.lib)
 
-  target_link_libraries(Ort INTERFACE Ort::DirectML d3d12.lib dxgi.lib dxguid.lib Dxcore.lib)
+#  target_link_libraries(${PROJECT_NAME} PRIVATE Ort)
 
-  target_link_libraries(${PROJECT_NAME} PRIVATE Ort)
-
-  install(IMPORTED_RUNTIME_ARTIFACTS Ort::DirectML DESTINATION "obs-plugins/64bit")
+#  install(IMPORTED_RUNTIME_ARTIFACTS Ort::DirectML DESTINATION "obs-plugins/64bit")
 else()
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
     set(Onnxruntime_LINK_LIBS "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.so.${Onnxruntime_VERSION}")
@@ -107,9 +94,11 @@ else()
   else()
     set(Onnxruntime_LINK_LIBS "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.so.${Onnxruntime_VERSION}")
     set(Onnxruntime_INSTALL_LIBS
-        ${Onnxruntime_LINK_LIBS} "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime_providers_shared.so"
-        "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime_providers_cuda.so"
-        "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime_providers_tensorrt.so")
+        ${Onnxruntime_LINK_LIBS}
+        #"${onnxruntime_SOURCE_DIR}/lib/libonnxruntime_providers_shared.so"
+        #"${onnxruntime_SOURCE_DIR}/lib/libonnxruntime_providers_cuda.so"
+        #"${onnxruntime_SOURCE_DIR}/lib/libonnxruntime_providers_tensorrt.so"
+    )
   endif()
   target_link_libraries(${PROJECT_NAME} PRIVATE ${Onnxruntime_LINK_LIBS})
   target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${onnxruntime_SOURCE_DIR}/include")
