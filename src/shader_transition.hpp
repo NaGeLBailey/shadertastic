@@ -251,6 +251,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
+    debug_trace("########################### FRAME ###########################");
     UNUSED_PARAMETER(effect);
     struct shadertastic_transition *s = shadertastic_transition_cast(data);
 

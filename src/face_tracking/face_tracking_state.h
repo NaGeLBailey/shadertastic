@@ -26,11 +26,10 @@ constexpr size_t FACEDETECTION_NB_ITERATIONS = 2;
 #include "face_tracking_crop_shader.h"
 
 struct face_tracking_state {
-    bool created = false;
-    gs_texrender_t *facedetection_texrender;
-    gs_texture_t *fd_points_texture;
-    gs_stagesurf_t *staging_texture_detection = nullptr;
-    std::shared_ptr<onnxmediapipe::FaceMesh> facemesh;
+    gs_texrender_t *facedetection_texrender{};
+    gs_texture_t *fd_points_texture{};
+    gs_stagesurf_t *staging_texture_detection{};
+    std::shared_ptr<onnxmediapipe::FaceMesh> facemesh{};
     onnxmediapipe::FaceLandmarksResults facelandmark_results[FACEDETECTION_NB_ITERATIONS];
     onnxmediapipe::FaceLandmarksResults average_results;
     OneEuroFilter filters[3 * refined_landmarks_num_points];

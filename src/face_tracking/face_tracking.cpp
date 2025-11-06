@@ -26,12 +26,14 @@
 #include "../logging_functions.hpp"
 #include "../try_gs_effect_set.h"
 #include "../settings.h"
+#include "../util/time_util.hpp"
 
 // Globals
 face_tracking_bounding_box no_bounding_box{
     -1.0f, -1.0f
     -1.0f, -1.0f
 };
+static const cv::Mat failed(0, 0, CV_8UC1);
 //----------------------------------------------------------------------------------------------------------------------
 
 void face_tracking_copy_points(onnxmediapipe::FaceLandmarksResults *facelandmark_results, float *points) {
@@ -71,8 +73,8 @@ face_tracking_bounding_box face_tracking_get_bounding_box(onnxmediapipe::FaceLan
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void face_tracking_create(face_tracking_state *s) {
-    s->created = true;
+void face_tracking_create(std::unique_ptr<face_tracking_state> &s) {
+    s.reset(new face_tracking_state);
 
     for (size_t i = 0; i < refined_landmarks_num_points * 3; ++i) {
         s->filters[i].setFrequency((float)std::max(1.0, obs_get_active_fps()));
@@ -606,6 +608,9 @@ uint2 scaledown_aspectratio(uint32_t cx, uint32_t cy, uint32_t max_size) {
 }
 
 void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, float deltatime) {
+    #ifdef DEV_MODE
+    unsigned long tic = get_time_us();
+    #endif
     auto facemesh = s->facemesh;
     if (!facemesh) {
         return;
@@ -623,6 +628,8 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
 
     bool prev_facelandmark_results_display_results = s->facelandmark_results_display_results;
 
+    debug_trace("A %lu", get_time_us()-tic);
+
     if (facemesh->IsFaceDetectionNeeded()) {
         cv::Mat imageBGR = face_tracking_get_image_for_detection(s, target_source, texrender_size_for_detection);
 
@@ -633,21 +640,22 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
         else {
             face_found = facemesh->RunFaceDetection(imageBGR);
         }
+        s->facelandmark_results_display_results = face_found;
+        return;
     }
-    if (!face_found) {
-        s->facelandmark_results_display_results = false;
-    }
-    else {
+    debug_trace("B %lu", get_time_us()-tic);
+    s->facelandmark_results_display_results = face_found;
+
+    if (face_found) {
         float2 roi_size = facemesh->getROISize();
         float2 roi_center = facemesh->getROICenter();
         float rotation = facemesh->getROIRotation();
 
+        debug_trace("C %lu", get_time_us()-tic);
+
         // Scaling down cx and cy to make them fit in 192x192
-        uint2 texrender_size_for_mesh{
-            .x = (uint32_t) (static_cast<float>(texrender_size_for_detection.x) / roi_size.x),
-            .y = (uint32_t) (static_cast<float>(texrender_size_for_detection.y) / roi_size.y),
-        };
         cv::Mat imageBGR = face_tracking_get_image_for_mesh(s, target_source, roi_center, roi_size, rotation);
+        debug_trace("D %lu", get_time_us()-tic);
 
         if (imageBGR.empty()) {
             log_error("Something went wrong with the extraction of the face to mesh");
@@ -656,6 +664,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
         else {
             s->facelandmark_results_display_results = facemesh->Run(imageBGR, (int)cx, (int)cy, s->facelandmark_results[results_index]);
         }
+        debug_trace("E %lu", get_time_us()-tic);
     }
 
     if (!s->facelandmark_results_display_results && prev_facelandmark_results_display_results) {
@@ -666,6 +675,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
         /* nothing to do */
     }
     else {
+        debug_trace("F %lu", get_time_us()-tic);
         if (shadertastic_settings().one_euro_enabled) {
             float fps = (float)std::max(0.1, obs_get_active_fps());
             for (size_t i = 0; i < refined_landmarks_num_points; ++i) {
@@ -707,6 +717,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
                 s->average_results.refined_landmarks[i] /= (float) count;
             }
         }
+        debug_trace("G %lu", get_time_us()-tic);
 
         float points[refined_landmarks_num_points * 4];
         face_tracking_copy_points(&s->average_results, points);
@@ -720,6 +731,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
             gs_texture_unmap(s->fd_points_texture);
         }
         obs_leave_graphics();
+        debug_trace("H %lu", get_time_us()-tic);
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -733,6 +745,8 @@ cv::Mat face_tracking_get_image_for_detection(face_tracking_state *s, obs_source
     const enum gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
     uint32_t cx = obs_source_get_width(target_source);
     uint32_t cy = obs_source_get_height(target_source);
+    const bool previous = gs_framebuffer_srgb_enabled();
+    gs_enable_framebuffer_srgb(true);
 
     if (!s->staging_texture_detection || gs_stagesurface_get_width(s->staging_texture_detection) != texrender_size.x || gs_stagesurface_get_height(s->staging_texture_detection) != texrender_size.y) {
         if (s->staging_texture_detection) {
@@ -770,19 +784,23 @@ cv::Mat face_tracking_get_image_for_detection(face_tracking_state *s, obs_source
             cv::Mat imageRGBA((int)texrender_size.y, (int)texrender_size.x, CV_32FC4, data);
             cv::Mat imageBGR = rgbaToBgrFloat(imageRGBA);
 
+            // Adjuting gamma
+            cv::pow(imageBGR, 1.0 / 2.2, imageBGR);
+
             gs_stagesurface_unmap(s->staging_texture_detection);
+            gs_enable_framebuffer_srgb(previous);
 
             return imageBGR;
         }
         else {
             debug("cpt2");
-            cv::Mat failed(0, 0, CV_32FC4);
+            gs_enable_framebuffer_srgb(previous);
             return failed;
         }
     }
     else {
         debug("cpt");
-        cv::Mat failed(0, 0, CV_32FC4);
+        gs_enable_framebuffer_srgb(previous);
         return failed;
     }
 }
@@ -819,16 +837,20 @@ void face_tracking_render(face_tracking_state *s, effect_shader *main_shader) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void face_tracking_destroy(face_tracking_state *s) {
-    obs_enter_graphics();
-    {
-        gs_texrender_destroy(s->facedetection_texrender);
-        gs_texture_destroy(s->fd_points_texture);
-        if (s->staging_texture_detection) {
-            gs_stagesurface_destroy(s->staging_texture_detection);
+void face_tracking_destroy(std::unique_ptr<face_tracking_state> &s) {
+    if (s != nullptr) {
+        obs_enter_graphics();
+        {
+            gs_texrender_destroy(s->facedetection_texrender);
+            gs_texture_destroy(s->fd_points_texture);
+            if (s->staging_texture_detection) {
+                gs_stagesurface_destroy(s->staging_texture_detection);
+            }
         }
+        obs_leave_graphics();
+        s->crop_shader.reset(); // NOLINT(bugprone-unused-return-value)
+        s->facemesh.reset();
+        s.reset(); // NOLINT(bugprone-unused-return-value)
     }
-    obs_leave_graphics();
-    s->crop_shader.reset(); // NOLINT(bugprone-unused-return-value)
 }
 //----------------------------------------------------------------------------------------------------------------------

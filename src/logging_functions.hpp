@@ -14,5 +14,6 @@
 #else
     #define debug(format, ...)
 #endif
+#define debug_trace(format, ...) //debug(format, ##__VA_ARGS__)
 
 #endif // SHADERTASTIC_LOGGING_FUNCTIONS_HPP

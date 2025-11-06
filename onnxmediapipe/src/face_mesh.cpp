@@ -21,7 +21,6 @@
 #include <iostream>
 #include "onnxmediapipe/models_provider.h"
 #include "onnxmediapipe/face_mesh.h"
-#include "../../src/logging_functions.hpp"
 
 namespace onnxmediapipe
 {
@@ -47,6 +46,7 @@ namespace onnxmediapipe
                     return false;
                 }
 
+                _bNeedsDetection = false;
                 _tracked_roi = {
                     .center_x = objects[0].center.x,
                     .center_y = objects[0].center.y,

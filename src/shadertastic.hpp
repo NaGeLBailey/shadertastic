@@ -61,7 +61,7 @@ struct shadertastic_filter : public shadertastic_common {
     bool should_reload = false;
 
     // Face detection state
-    face_tracking_state face_tracking;
+    std::unique_ptr<face_tracking_state> face_tracking{};
 
     void release() {
         if (this->effects != nullptr) {

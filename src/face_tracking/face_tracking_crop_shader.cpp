@@ -19,7 +19,9 @@
 #include "face_tracking_crop_shader.h"
 #include "../util/rgba_to_rgb.h"
 #include "../logging_functions.hpp"
-#include "../try_gs_effect_set.h"
+#include "../util/time_util.hpp"
+
+static const cv::Mat failed(0, 0, CV_8UC1);
 //----------------------------------------------------------------------------------------------------------------------
 
 static inline gs_texture_t * prepare_source_texture(gs_texrender_t *source_texrender, obs_source_t *target, uint32_t cx, uint32_t cy, enum gs_color_space space) {
@@ -50,18 +52,10 @@ static inline void render_filter_texture(gs_texture_t *source_tex, gs_effect_t *
 	gs_eparam_t *image = gs_effect_get_param_by_name(effect, "image");
 	size_t passes, i;
 
-	const bool linear_srgb = true;
-
 	const bool previous = gs_framebuffer_srgb_enabled();
-	gs_enable_framebuffer_srgb(linear_srgb);
+	gs_enable_framebuffer_srgb(true);
 
-
-//	if (linear_srgb) {
-        try_gs_effect_set_texture_srgb("source_tex", image, source_tex);
-//    }
-//	else {
-//        try_gs_effect_set_texture("source_tex", image, tex);
-//    }
+    gs_effect_set_texture_srgb(image, source_tex);
 
 	passes = gs_technique_begin(tech);
 	for (i = 0; i < passes; i++) {
@@ -140,7 +134,9 @@ FaceTrackingCropShader::~FaceTrackingCropShader() {
 }
 
 cv::Mat FaceTrackingCropShader::getCroppedImage(obs_source_t *target_source, float2 &roi_center, float2 &roi_size, float rotation) {
-    cv::Mat failed(0, 0, CV_32FC4);
+    #ifdef DEV_MODE
+    unsigned long tic = get_time_us();
+    #endif
     const enum gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
         GS_CS_SRGB_16F,
@@ -171,10 +167,10 @@ cv::Mat FaceTrackingCropShader::getCroppedImage(obs_source_t *target_source, flo
             .x=roi_size.x,
             .y=roi_size.y,
         };
-        try_gs_effect_set_vec2("center", FaceTrackingCropShader::gs_crop_param_center, &center);
-        try_gs_effect_set_vec2("crop_size", FaceTrackingCropShader::gs_crop_param_crop_size, &crop_size);
-        try_gs_effect_set_float("rotation", FaceTrackingCropShader::gs_crop_param_rotation, rotation);
-        try_gs_effect_set_float("aspect_ratio", FaceTrackingCropShader::gs_crop_param_aspect_ratio, aspect_ratio);
+        gs_effect_set_vec2(FaceTrackingCropShader::gs_crop_param_center, &center);
+        gs_effect_set_vec2(FaceTrackingCropShader::gs_crop_param_crop_size, &crop_size);
+        gs_effect_set_float(FaceTrackingCropShader::gs_crop_param_rotation, rotation);
+        gs_effect_set_float(FaceTrackingCropShader::gs_crop_param_aspect_ratio, aspect_ratio);
 
         gs_blend_state_push();
         gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
@@ -183,7 +179,7 @@ cv::Mat FaceTrackingCropShader::getCroppedImage(obs_source_t *target_source, flo
         gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
         gs_ortho(0.0f, 192.0f, 0.0f, 192.0f, -100.0f, 100.0f);
 
-        render_filter_texture(source_tex, this->gs_crop_effect, 192, 192);
+        render_filter_texture(source_tex, FaceTrackingCropShader::gs_crop_effect, 192, 192);
 
         gs_blend_state_pop();
         gs_texrender_end(this->crop_texrender);
@@ -195,10 +191,13 @@ cv::Mat FaceTrackingCropShader::getCroppedImage(obs_source_t *target_source, flo
         uint32_t linesize;
         if (gs_stagesurface_map(this->staging_texture, &data, &linesize)) {
             // Convert RGBA to BGR
+            debug_trace("  1 %lu", get_time_us()-tic);
             cv::Mat imageRGBA(192, 192, CV_32FC4, data);
             cv::Mat imageBGR = rgbaToBgrFloat(imageRGBA);
+            debug_trace("  2 %lu", get_time_us()-tic);
 
             gs_stagesurface_unmap(this->staging_texture);
+            debug_trace("  3 %lu", get_time_us()-tic);
 
             return imageBGR;
         }

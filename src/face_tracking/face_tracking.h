@@ -52,7 +52,7 @@ void face_tracking_copy_points(onnxmediapipe::FaceLandmarksResults *facelandmark
 
 face_tracking_bounding_box face_tracking_get_bounding_box(onnxmediapipe::FaceLandmarksResults *facelandmark_results, const unsigned short int *indices, int nb_indices);
 
-void face_tracking_create(face_tracking_state *s);
+void face_tracking_create(std::unique_ptr<face_tracking_state> &s);
 
 void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, float deltatime);
 
@@ -62,6 +62,6 @@ cv::Mat face_tracking_get_image_for_mesh(face_tracking_state *s, obs_source_t *t
 
 void face_tracking_render(face_tracking_state *s, effect_shader *main_shader);
 
-void face_tracking_destroy(face_tracking_state *s);
+void face_tracking_destroy(std::unique_ptr<face_tracking_state> &s);
 
 #endif // SHADERTASTIC_FACE_TRACKING_H

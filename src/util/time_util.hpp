@@ -23,8 +23,16 @@ Copyright (C) 2023 by xurei <xureilab@gmail.com>
 inline unsigned long get_time_ms() {
     const auto now = std::chrono::system_clock::now();
     const auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
-
     const auto value = now_ms.time_since_epoch();
+    const unsigned long duration = static_cast<unsigned long>(value.count());
+
+    return duration;
+}
+
+inline unsigned long get_time_us() {
+    const auto now = std::chrono::system_clock::now();
+    const auto now_us = std::chrono::time_point_cast<std::chrono::microseconds>(now);
+    const auto value = now_us.time_since_epoch();
     const unsigned long duration = static_cast<unsigned long>(value.count());
 
     return duration;
