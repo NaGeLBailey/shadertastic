@@ -3,11 +3,15 @@
     "author_name": "xurei",
     "author_url": "http://about.xurei.io"
   },
-  "metafileVersion": 2,
+  "metafileVersion": 1,
   "label": "[Face Detection] Reference",
   "steps": 1,
   "input_facedetection": true,
   "parameters": [
+    {
+      "type": "facetracking",
+      "name": "face"
+    },
     {
       "name": "show_mesh_face",
       "label": "Show face mesh points",
