@@ -12,11 +12,15 @@ type param_common = {
      * Name of the field. It *must* be the same as the associated variable in the shader.
      */
     name: string,
+
     /**
-     * If set to true, this field will only be available in the property UI if
-     * the developer mode is active.
+     * The label of the field in the UI. If not set, the name will be used.
      */
     label?: string,
+
+    /**
+     * Description of the field. It will be shown in the UI.
+     */
     description?: string,
 
     /**
@@ -57,6 +61,26 @@ type param_color = param_common & {
      * If alpha is not present, full opacity will be used
      */
     default: ColorRGB | ColorARGB,
+}
+
+/**
+ * Use the face tracking functionnality.
+ *
+ * Shader equivalent: `uniform texture2d`
+ */
+type param_facetracking = param_common & {
+    type: "facetracking",
+    /**
+     * Allow to chain the result of the face tracking to the next filter.
+     * If enabled, the face tracking algorithm will not be applied again on posterior filters. Instead, the result of
+     * this filter will be used.
+     *
+     * Enable this option only if you don't move the face in the scene with the effect.
+     * For example, the "Laser Eyes" effect uses this option, but the "Distort" effect doesn't.
+     *
+     * @defaut false
+     */
+    allow_chaining: boolean,
 }
 
 /**
@@ -267,6 +291,7 @@ export type param = (
     param_audiolevel |
     param_bool |
     param_color |
+    param_facetracking |
     param_float |
     param_image |
     param_int |
@@ -275,7 +300,7 @@ export type param = (
     param_source |
     param_text |
     param_time
-    );
+);
 
 export type meta = {
     /**

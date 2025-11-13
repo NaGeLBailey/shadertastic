@@ -78,12 +78,12 @@ void shadertastic_transition_destroy(void *data) {
     gs_texrender_destroy(s->transition_texrender[0]);
     gs_texrender_destroy(s->transition_texrender[1]);
     obs_leave_graphics();
-    debug("Destroy2");
+    debug_trace("Destroy2");
 
     s->release();
-    debug("Destroy3");
+    debug_trace("Destroy3");
     bfree(data);
-    debug("Destroyed");
+    debug_trace("Destroyed");
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -151,24 +151,14 @@ void shadertastic_transition_update(void *data, obs_data_t *settings) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void shadertastic_transition_render_init(void *data, gs_texture_t *a, gs_texture_t *b, float t, uint32_t cx, uint32_t cy) {
-    debug("shadertastic_transition_render_init");
-    UNUSED_PARAMETER(t);
-    UNUSED_PARAMETER(a);
-    UNUSED_PARAMETER(b);
-    UNUSED_PARAMETER(cx);
-    UNUSED_PARAMETER(cy);
-    struct shadertastic_transition *s = shadertastic_transition_cast(data);
-    s->transition_texrender_buffer = 0;
-}
-//----------------------------------------------------------------------------------------------------------------------
-
 static void shadertastic_transition_tick(void *data, float deltatime_seconds) {
     struct shadertastic_transition *s = shadertastic_transition_cast(data);
-    obs_source_t *target = obs_filter_get_target(s->source);
-    s->time += deltatime_seconds;
-    s->delta_time = deltatime_seconds;
-    s->frame_index++;
+    if (s->transitioning) {
+        s->time += deltatime_seconds;
+        s->delta_time = deltatime_seconds;
+        debug_trace("shadertastic_transition_tick %i", s->frame_index);
+        s->frame_index++;
+    }
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -185,6 +175,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
         is_studio_mode = true;
         s->frame_index--;
     }
+    debug_trace("shadertastic_transition_shader_render %i", s->frame_index);
 
     if (effect != nullptr) {
         gs_texture_t *interm_texture = shadertastic_transparent_texture;
@@ -265,7 +256,7 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
             obs_source_update(s->source, nullptr);
         }
 
-        obs_transition_video_render(s->source, shadertastic_transition_render_init);
+        //obs_transition_video_render(s->source, shadertastic_transition_render_init);
 
         info("Started transition: %s -> %s",
             obs_source_get_name(scene_a),
@@ -442,6 +433,7 @@ void shadertastic_transition_start(void *data) {
         s->rand_seed = (float)((double)rand() / (double)RAND_MAX);
         s->transition_started = true;
         s->frame_index = 0;
+        debug_trace("shadertastic_transition_start %i", s->frame_index);
 
         if (s->selected_effect != nullptr) {
             for (auto prev_frame_param : s->selected_effect->prev_frames_to_keep) {
@@ -457,9 +449,9 @@ void shadertastic_transition_start(void *data) {
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_transition_stop(void *data) {
-    debug("STOP");
     struct shadertastic_transition *s = shadertastic_transition_cast(data);
     if (s->transitioning) {
+        debug("End of transition %s", obs_source_get_name(s->source));
         s->transitioning = false;
     }
 }

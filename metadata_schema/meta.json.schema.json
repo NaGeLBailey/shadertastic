@@ -72,6 +72,7 @@
         }
       },
       "required": [
+        "metafileVersion",
         "about",
         "label"
       ],
@@ -119,6 +120,7 @@
       "description": "Audio-level aware parameter\n\nShader equivalent: `uniform float`",
       "properties": {
         "description": {
+          "description": "Description of the field. It will be shown in the UI.",
           "type": "string"
         },
         "devmode": {
@@ -126,7 +128,7 @@
           "type": "boolean"
         },
         "label": {
-          "description": "If set to true, this field will only be available in the property UI if the developer mode is active.",
+          "description": "The label of the field in the UI. If not set, the name will be used.",
           "type": "string"
         },
         "name": {
@@ -152,6 +154,7 @@
           "type": "boolean"
         },
         "description": {
+          "description": "Description of the field. It will be shown in the UI.",
           "type": "string"
         },
         "devmode": {
@@ -159,7 +162,7 @@
           "type": "boolean"
         },
         "label": {
-          "description": "If set to true, this field will only be available in the property UI if the developer mode is active.",
+          "description": "The label of the field in the UI. If not set, the name will be used.",
           "type": "string"
         },
         "name": {
@@ -194,6 +197,7 @@
           "description": "Format: #RRGGBB or #AARRGGBB If alpha is not present, full opacity will be used"
         },
         "description": {
+          "description": "Description of the field. It will be shown in the UI.",
           "type": "string"
         },
         "devmode": {
@@ -201,7 +205,7 @@
           "type": "boolean"
         },
         "label": {
-          "description": "If set to true, this field will only be available in the property UI if the developer mode is active.",
+          "description": "The label of the field in the UI. If not set, the name will be used.",
           "type": "string"
         },
         "name": {
@@ -228,6 +232,7 @@
           "type": "number"
         },
         "description": {
+          "description": "Description of the field. It will be shown in the UI.",
           "type": "string"
         },
         "devmode": {
@@ -235,7 +240,7 @@
           "type": "boolean"
         },
         "label": {
-          "description": "If set to true, this field will only be available in the property UI if the developer mode is active.",
+          "description": "The label of the field in the UI. If not set, the name will be used.",
           "type": "string"
         },
         "max": {
@@ -289,6 +294,7 @@
           "type": "string"
         },
         "description": {
+          "description": "Description of the field. It will be shown in the UI.",
           "type": "string"
         },
         "devmode": {
@@ -301,7 +307,7 @@
           "type": "boolean"
         },
         "label": {
-          "description": "If set to true, this field will only be available in the property UI if the developer mode is active.",
+          "description": "The label of the field in the UI. If not set, the name will be used.",
           "type": "string"
         },
         "name": {
@@ -349,6 +355,7 @@
           "type": "number"
         },
         "description": {
+          "description": "Description of the field. It will be shown in the UI.",
           "type": "string"
         },
         "devmode": {
@@ -356,7 +363,7 @@
           "type": "boolean"
         },
         "label": {
-          "description": "If set to true, this field will only be available in the property UI if the developer mode is active.",
+          "description": "The label of the field in the UI. If not set, the name will be used.",
           "type": "string"
         },
         "max": {
@@ -399,6 +406,7 @@
           "type": "number"
         },
         "description": {
+          "description": "Description of the field. It will be shown in the UI.",
           "type": "string"
         },
         "devmode": {
@@ -406,7 +414,7 @@
           "type": "boolean"
         },
         "label": {
-          "description": "If set to true, this field will only be available in the property UI if the developer mode is active.",
+          "description": "The label of the field in the UI. If not set, the name will be used.",
           "type": "string"
         },
         "name": {
@@ -451,6 +459,7 @@
       "description": "Save the previous frame of a specific step as a parameter\n\nShader equivalent: `uniform texture2d`",
       "properties": {
         "description": {
+          "description": "Description of the field. It will be shown in the UI.",
           "type": "string"
         },
         "devmode": {
@@ -458,7 +467,7 @@
           "type": "boolean"
         },
         "label": {
-          "description": "If set to true, this field will only be available in the property UI if the developer mode is active.",
+          "description": "The label of the field in the UI. If not set, the name will be used.",
           "type": "string"
         },
         "name": {
@@ -466,7 +475,8 @@
           "type": "string"
         },
         "step": {
-          "description": "The step to keep as a previous frame. It must be less or equal to the number of steps defined in the effect root metadata.",
+          "default": -1,
+          "description": "The step to keep as a previous frame. It must be less or equal to the number of steps defined in the effect root metadata.\n\nIf set to -1 (the default value), the last step will be used",
           "type": "number"
         },
         "type": {
@@ -486,6 +496,7 @@
       "description": "Video Source parameter\n\nShader equivalent: `uniform texture2d`",
       "properties": {
         "description": {
+          "description": "Description of the field. It will be shown in the UI.",
           "type": "string"
         },
         "devmode": {
@@ -493,7 +504,7 @@
           "type": "boolean"
         },
         "label": {
-          "description": "If set to true, this field will only be available in the property UI if the developer mode is active.",
+          "description": "The label of the field in the UI. If not set, the name will be used.",
           "type": "string"
         },
         "name": {
@@ -516,6 +527,7 @@
       "description": "Show some text in the properties UI\n\nShader equivalent: none",
       "properties": {
         "description": {
+          "description": "Description of the field. It will be shown in the UI.",
           "type": "string"
         },
         "devmode": {
@@ -523,7 +535,7 @@
           "type": "boolean"
         },
         "label": {
-          "description": "If set to true, this field will only be available in the property UI if the developer mode is active.",
+          "description": "The label of the field in the UI. If not set, the name will be used.",
           "type": "string"
         },
         "name": {
@@ -550,6 +562,7 @@
       "description": "Execution time of the effect, in seconds. An optional speed input is provided to accelerate the effect. Also, the time can be reset to zero when the filter is toggled as visible\n\nShader equivalent: `uniform float`",
       "properties": {
         "description": {
+          "description": "Description of the field. It will be shown in the UI.",
           "type": "string"
         },
         "devmode": {
@@ -557,7 +570,7 @@
           "type": "boolean"
         },
         "label": {
-          "description": "If set to true, this field will only be available in the property UI if the developer mode is active.",
+          "description": "The label of the field in the UI. If not set, the name will be used.",
           "type": "string"
         },
         "name": {

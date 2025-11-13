@@ -18,6 +18,17 @@
 #ifndef SHADERTASTIC_SHADER_FILTER_HPP
 #define SHADERTASTIC_SHADER_FILTER_HPP
 
+#include <obs-module.h>
+#include <QApplication>
+#include <QClipboard>
+#include <QMessageBox>
+#include "effect.h"
+#include "face_tracking/face_tracking.h"
+#include "settings.h"
+#include "shadertastic.hpp"
+#include "shadertastic_common.hpp"
+#include "util/time_util.hpp"
+
 obs_properties_t *shadertastic_filter_properties(void *data);
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -44,6 +55,7 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     s->source = source;
     s->effects = new shadertastic_effects_map_t();
     s->rand_seed = (float)rand() / (float)RAND_MAX;
+    s->frame_index = 0;
 
     // FIXME getting the root source doesn't work here :( it would be great for debugging, but obs_filter_get_parent() is not valid outside of video_render, filter_audio, filter_video, and filter_remove callbacks.
     //#ifdef DEV_MODE
@@ -151,7 +163,7 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
     s->width = obs_source_get_base_width(target);
     s->height = obs_source_get_base_height(target);
 
-    bool is_enabled = obs_source_enabled(s->source);
+    bool is_enabled = obs_source_enabled(s->source) && s->selected_effect != nullptr;
     if (s->selected_effect && s->selected_effect->input_facedetection) {
         if (s->face_tracking == nullptr) {
             face_tracking_create(s->face_tracking);
@@ -165,12 +177,16 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
                 param->tick(s);
             }
         }
+        if (!s->was_enabled) {
+            s->frame_index = 0;
+        }
+        /*else {
+            s->frame_index++;
+        }*/
     }
     if (is_enabled != s->was_enabled) {
         s->was_enabled = is_enabled;
-        s->frame_index = 0;
     }
-    s->frame_index++;
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -252,6 +268,9 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                     break;
                 }
             }
+
+            s->frame_index++;
+
             gs_blend_state_pop();
         }
     }
@@ -296,6 +315,8 @@ bool shadertastic_filter_reload_button_click(obs_properties_t *props, obs_proper
     }
     s->should_reload = true;
     s->rand_seed = (float)rand() / (float)RAND_MAX;
+    s->was_enabled = false;
+    s->frame_index = 0;
     obs_source_update(s->source, nullptr);
     return true;
 }
