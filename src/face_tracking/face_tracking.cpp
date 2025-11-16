@@ -819,17 +819,9 @@ void face_tracking_render(face_tracking_state *s, effect_shader *main_shader) {
     else {
         try_gs_effect_set_bool("fd_face_found", main_shader->param_fd_face_found, true);
         {
-            auto bbox = face_tracking_get_bounding_box(&s->average_results, left_iris_refinement_indices, iris_refined_region_num_points);
-            //debug("Left Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
-        }
-        {
-            auto bbox = face_tracking_get_bounding_box(&s->average_results, right_iris_refinement_indices, iris_refined_region_num_points);
-            //debug("Right Eye: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
-        }
-        {
             auto bbox = face_tracking_get_bounding_box(&s->average_results, not_lips_eyes_indices, 310);
-            try_gs_effect_set_vec2("fd_face_1", main_shader->param_fd_face_tl, &bbox.point1);
-            try_gs_effect_set_vec2("fd_face_2", main_shader->param_fd_face_br, &bbox.point2);
+            try_gs_effect_set_vec2("fd_face_tl", main_shader->param_fd_face_tl, &bbox.point1);
+            try_gs_effect_set_vec2("fd_face_br", main_shader->param_fd_face_br, &bbox.point2);
             //debug("Face: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
         }
         try_gs_effect_set_texture("fd_points_tex", main_shader->param_fd_points_tex, s->fd_points_texture);

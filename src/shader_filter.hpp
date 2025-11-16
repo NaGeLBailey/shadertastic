@@ -87,7 +87,7 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
     // Set defaults for each effect
     for (auto& [effect_name, effect] : *(s->effects)) {
         // LEGACY - input_time is deprecated. Migrating it as a parameter
-        if (effect.input_time) {
+        if (effect.legacy_input_time) {
             obs_data_set_default_double(settings, get_full_param_name_static(effect_name, "speed").c_str(), 0.1);
             double speed = obs_data_get_double(settings, get_full_param_name_static(effect_name, "speed").c_str());
             obs_data_set_default_double(settings, get_full_param_name_static(effect_name, "time.speed").c_str(), speed);
@@ -216,9 +216,8 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
             unsigned long tic = get_time_us();
             #endif
             face_tracking_tick(s->face_tracking.get(), target_source, s->delta_time);
-            unsigned long toc = get_time_us();
 
-            debug("Facetracking time %lu", toc-tic);
+            debug("Facetracking time %lu", get_time_us()-tic);
         }
         gs_texture_t *interm_texture = shadertastic_transparent_texture;
         if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {

@@ -60,7 +60,7 @@ void shadertastic_effect_t::load() {
         nb_steps = (int)obs_data_get_int(metadata, "steps");
 
         obs_data_set_default_bool(metadata, "input_time", false);
-        input_time = obs_data_get_bool(metadata, "input_time");
+        legacy_input_time = obs_data_get_bool(metadata, "input_time");
 
         obs_data_set_default_bool(metadata, "input_facedetection", false);
         input_facedetection = obs_data_get_bool(metadata, "input_facedetection");
@@ -72,7 +72,7 @@ void shadertastic_effect_t::load() {
         }
 
         // LEGACY - input_time is deprecated. Migrating it as a parameter
-        if (input_time) {
+        if (legacy_input_time) {
             obs_data_t *param_metadata = obs_data_create();
             obs_data_set_string(param_metadata, "name", "time");
             obs_data_set_string(param_metadata, "type", "time");
