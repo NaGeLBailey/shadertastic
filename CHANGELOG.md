@@ -5,6 +5,38 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- `previous_frame` parameter (#ST-2)
+- Multiple effects path support (#ST-37)
+- Added `metafileVersion` to the meta file in order to anticipate future changes
+- Added json-schema and d.ts files for reference and IDE support
+- Added `frame_index` parameter, counting the number of frames since the transition started or the effect is visible (#ST-36)
+- `is_studio_mode` parameter, mostly for development purpose (#ST-38)
+
+### Fixed
+- Fixed `obs_get_source_properties("shadertastic_transition")` and `obs_get_source_properties("shadertastic_filter")` crashing OBS
+- Fixed "Min Cutoff" step settings being zero
+- Reset `prev_time` on visibility toggle
+- Updated plugin name for OBS 32
+- Fixed "Crashes when reading OBS properties by source ID" (issue #11)
+
+### Changed
+- Replaced CMake build with newest template from OBS 30.2: https://github.com/obsproject/obs-plugintemplate/commit/7c017427c9ee2accc74be525e3cbf2ace5549b6c (#ST-5)
+- Migrated `input_type` option as parameter `time` (#ST-34)
+- Moved export buttons above the about box
+- Face tracking: Slightly improved the crop192 filter
+- Face tracking: slight performance improvement & do not execute the face mesh if a face is not detected
+- Performance: shared placeholder textures for all filters and transitions
+- Updated ONNX Runtime from `1.17.1` to `1.23.2`
+
+### Effects
+- Rainbow effect: added random mode
+- Laser eyes: performance improvement by using static data
+- Added "Color invert" filters
+
+### Removed
+- Face tracking: removed eye points parameters (`fd_leye_1` and similar) (#ST-35)
+
 ## [0.1.5] - 2025-06-06
 ### Fixed
 - Transition Settings : copy/paste config showing only in developer mode
