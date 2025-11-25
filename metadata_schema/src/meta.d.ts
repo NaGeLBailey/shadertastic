@@ -15,6 +15,8 @@ type param_common = {
 
     /**
      * The label of the field in the UI. If not set, the name will be used.
+     *
+     * @default Same as name
      */
     label?: string,
 
@@ -26,14 +28,19 @@ type param_common = {
     /**
      * If set to true, this field will only be available in the property UI if
      * the developer mode is active.
+     *
+     * @default false
      */
     devmode?: boolean,
 }
 
 /**
- * Audio-level aware parameter
+ * An audio-level aware parameter that responds to audio input.
  *
- * Shader equivalent: `uniform float`
+ * The `audiolevel` type represents a parameter that can monitor and respond to audio levels.
+ * This allows for creating effects that react to sound or music.
+ *
+ * @shaderparam `uniform float`
  */
 type param_audiolevel = param_common & {
     type: "audiolevel",
@@ -42,7 +49,9 @@ type param_audiolevel = param_common & {
 /**
  * Boolean parameter
  *
- * Shader equivalent: `uniform bool`
+ * This will show a Yes/No input UI in the effect properties.
+ *
+ * @shaderparam `uniform bool`
  */
 type param_bool = param_common & {
     type: "bool",
@@ -52,7 +61,7 @@ type param_bool = param_common & {
 /**
  * Color parameter
  *
- * Shader equivalent: `uniform float4`
+ * @shaderparam `uniform float4`
  */
 type param_color = param_common & {
     type: "color",
@@ -66,7 +75,7 @@ type param_color = param_common & {
 /**
  * Use the face tracking functionnality.
  *
- * Shader equivalent: `uniform texture2d`
+ * @shaderparam `uniform texture2d`
  */
 type param_facetracking = param_common & {
     type: "facetracking",
@@ -86,7 +95,10 @@ type param_facetracking = param_common & {
 /**
  * Float/Double parameter
  *
- * Shader equivalent: `uniform float`
+ * The `float` type represents a floating-point parameter that can be exposed in the user interface.
+ * It allows for configuring numeric inputs with options like sliders and value constraints.
+ *
+ * @shaderparam `uniform float`
  */
 type param_float = param_common & {
     type: "float" | "double",
@@ -94,6 +106,7 @@ type param_float = param_common & {
 
     /**
      * Show a slider in the UI
+     * @default false
      */
     slider?: boolean,
     /**
@@ -116,7 +129,7 @@ type param_float = param_common & {
 /**
  * Image parameter.
  *
- * Shader equivalent: `uniform texture2d`
+ * @shaderparam `uniform texture2d`
  *
  * It can be either a bundled image in your effect (e.g. a font map to draw text),a file input
  * in the filter properties, or both.
@@ -156,7 +169,10 @@ type param_image = param_common & {
 /**
  * Integer parameter
  *
- * Shader equivalent: `uniform int`
+ * The `int` type represents an integer parameter that can be exposed in the user interface.
+ * It allows for configuring numeric inputs with options like sliders and value constraints.
+ *
+ * @shaderparam `uniform int`
  */
 type param_int = param_common & {
     type: "int",
@@ -165,6 +181,7 @@ type param_int = param_common & {
 
     /**
      * Show a slider in the UI
+     * @default false
      */
     slider?: boolean,
     /**
@@ -173,26 +190,32 @@ type param_int = param_common & {
      */
     min?: number,
     /**
-     Maximum value of the parameter. If not set, 100 will be used
+     * Maximum value of the parameter. If not set, 100 will be used
      * @type integer
      */
     max?: number,
     /**
      * Smaller step allowed. If not set, 1 will be used
      * @type integer
+     * @default 1
      */
     step?: number,
 }
 
 /**
- * List of Integers parameter
+ * List of Integers parameter.
  *
- * Shader equivalent: `uniform int`
+ * The `list_int` shows a select input type in the effect UI.
+ * This is typically used to change the behaviour of the effect and making it easier to understand for the end-user.
+ *
+ * @shaderparam `uniform int`
  */
 type param_list_int = param_common & {
     type: "list_int",
+
     /**
      * List of values available
+     * @type { label: string, value: integer }f
      */
     values: Array<{
         label: string,
@@ -206,7 +229,7 @@ type param_list_int = param_common & {
 /**
  * Save the previous frame of a specific step as a parameter
  *
- * Shader equivalent: `uniform texture2d`
+ * @shaderparam `uniform texture2d`
  */
 type param_prev_frame = param_common & {
     type: "prev_frame",
@@ -225,7 +248,7 @@ type param_prev_frame = param_common & {
 /**
  * Video Source parameter
  *
- * Shader equivalent: `uniform texture2d`
+ * @shaderparam `uniform texture2d`
  */
 type param_source = param_common & {
     type: "source",
@@ -233,7 +256,7 @@ type param_source = param_common & {
 /**
  * Show some text in the properties UI
  *
- * Shader equivalent: none
+ * @shaderparam none
  */
 type param_text = param_common & {
     type: "text",
@@ -244,7 +267,7 @@ type param_text = param_common & {
  * An optional speed input is provided to accelerate the effect.
  * Also, the time can be reset to zero when the filter is toggled as visible
  *
- * Shader equivalent: `uniform float`
+ * @shaderparam `uniform float`
  */
 type param_time = param_common & {
     type: "time",
@@ -343,13 +366,13 @@ export type meta = {
     parameters?: param[],
 
     /**
-     * DEPRECATED Old way of using a time parameter in the effect. Use `param_time` instead
+     * DEPRECATED Old way of using a time parameter in the effect. Use the parameter `time` instead
      * @deprecated
      */
     input_time?: boolean,
 
     /**
-     * DEPRECATED Old way of using the face detection parameter in the effect. Use `param_face_detection` instead
+     * DEPRECATED Old way of using the face detection parameter in the effect. Use the parameter `face_detection` instead
      * @deprecated
      */
     input_facedetection?: boolean,
