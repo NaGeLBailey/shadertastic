@@ -222,7 +222,6 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
             debug_trace("Facetracking time %lu", get_time_us()-tic);
         }
         gs_texture_t *interm_texture = shadertastic_transparent_texture;
-        selected_effect->set_params(nullptr, nullptr, s->frame_index, false, filter_time, s->delta_time, cx, cy, s->rand_seed);
         if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
             gs_blend_state_push();
             gs_blend_function_separate(
@@ -254,6 +253,8 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
 
                 if (texrender_ok) {
                     selected_effect->set_step_params(current_step, interm_texture);
+                    // You CANNOT put it above the for loop. Textures need to be rebinded every time (not that costful actually)
+                    selected_effect->set_params(nullptr, nullptr, s->frame_index, false, filter_time, s->delta_time, cx, cy, s->rand_seed);
 
                     selected_effect->main_shader->render(s->source, cx, cy);
 

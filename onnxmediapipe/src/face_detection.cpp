@@ -38,12 +38,16 @@ namespace onnxmediapipe
             Ort::SessionOptions sessionOptions;
             sessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
 //            sessionOptions.SetInterOpNumThreads(2);
-//            sessionOptions.SetIntraOpNumThreads(2);
-//            sessionOptions.DisableMemPattern();
-            sessionOptions.DisablePerSessionThreads();
-            sessionOptions.SetExecutionMode(ExecutionMode::ORT_SEQUENTIAL);
+//            sessionOptions.SetIntraOpNumThreads(3);
+            sessionOptions.EnableCpuMemArena();
+            sessionOptions.EnableMemPattern();
+            //sessionOptions.EnableProfiling();
+//            sessionOptions.DisablePerSessionThreads();
+            sessionOptions.SetExecutionMode(ExecutionMode::ORT_PARALLEL);
+
+            // TODO sessionOptions.AppendExecutionProvider_DML
+
             char *model_data_path = obs_module_file("face_detection_models/face_detection_full_range.onnx");
-            //const char *model_data_path = obs_module_file("face_detection_models/blazeface.onnx");
 
             if (model_data_path) {
                 #if defined(_WIN32)
