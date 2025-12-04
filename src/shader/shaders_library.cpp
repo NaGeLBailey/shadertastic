@@ -23,15 +23,19 @@ std::shared_ptr<effect_shader> shaders_library_t::load_shader_file(const std::st
     std::string shader_path = this->get_shader_path(path);
     debug("shaders_library.load_shader_file %s", shader_path.c_str());
     effect_shader *new_shader = new effect_shader();
-    bool is_loaded = new_shader->load(shader_path.c_str());
+    std::string error_str = new_shader->load(shader_path.c_str());
+    bool is_loaded = error_str.empty();
+
     if (!is_loaded) {
         // Effect loading failed. Using the fallback effect to show ERR on the source
         delete new_shader;
         auto emplaced = shaders.emplace(path, fallback_shader);
+        errors.emplace(path, error_str);
         return emplaced.first->second;
     }
     else {
         auto emplaced = shaders.emplace(path, new_shader);
+        errors.erase(path);
         return emplaced.first->second;
     }
 }
@@ -49,6 +53,16 @@ std::shared_ptr<effect_shader> shaders_library_t::get(const std::string &path) {
     auto it = shaders.find(path);
     if (it == shaders.end()) {
         return this->load_shader_file(path);
+    }
+    else {
+        return it->second;
+    }
+}
+
+std::string shaders_library_t::get_error(const std::string &path) const {
+    auto it = errors.find(path);
+    if (it == errors.end()) {
+        return "";
     }
     else {
         return it->second;

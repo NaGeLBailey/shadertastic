@@ -1,8 +1,6 @@
 #ifndef SHADERTASTIC_TUPLE_H
 #define SHADERTASTIC_TUPLE_H
 
-#include <cstdint>
-
 struct int2 {
     int x;
     int y;

@@ -27,14 +27,14 @@ effect_shader::~effect_shader() {
     this->release();
 }
 
-bool effect_shader::load(const char *shader_path) {
+std::string effect_shader::load(const char *shader_path) {
     debug("SHADER PATH: %s", shader_path);
     this->path = std::string(shader_path);
     char *error_string = nullptr;
     char *shader_source_ = load_file_zipped_or_local(shader_path);
     if (shader_source_ == nullptr) {
         log_error("Could not open shader file %s : File does not exist", shader_path);
-        return false;
+        return "File does not exist";
     }
     else {
         std::string shader_source = std::string(shader_source_);
@@ -66,9 +66,10 @@ bool effect_shader::load(const char *shader_path) {
         obs_leave_graphics();
 
         if (!gs_effect) {
-            log_error("Could not open shader file %s : %s", shader_path, error_string);
+            log_error("Could not open shader file %s :\n%s", shader_path, error_string);
+            std::string error_str = std::string("") + error_string;
             bfree(error_string);
-            return false;
+            return error_str;
         }
         else {
             param_tex_a = gs_effect_get_param_by_name(gs_effect, "tex_a");
@@ -84,7 +85,7 @@ bool effect_shader::load(const char *shader_path) {
             param_current_step = gs_effect_get_param_by_name(gs_effect, "current_step");
             param_nb_steps = gs_effect_get_param_by_name(gs_effect, "nb_steps");
 
-            return true;
+            return "";
         }
     }
 }
@@ -93,7 +94,7 @@ bool effect_shader::loop(const char *tech_name) {
     return gs_effect_loop(gs_effect, tech_name);
 }
 
-gs_eparam_t *effect_shader::get_param_by_name(const char *param_name) {
+gs_eparam_t *effect_shader::get_param_by_name(const char *param_name) const {
     return gs_effect_get_param_by_name(gs_effect, param_name);
 }
 

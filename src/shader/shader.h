@@ -44,11 +44,10 @@ class effect_shader {
     gs_eparam_t *param_nb_steps = nullptr;
 
     std::string path{};
-    std::string error_str{};
 
     ~effect_shader();
 
-    bool load(const char *shader_path);
+    std::string load(const char *shader_path);
 
     gs_eparam_t * get_param_by_name(const char *param_name) const;
     bool loop(const char *tech_name);

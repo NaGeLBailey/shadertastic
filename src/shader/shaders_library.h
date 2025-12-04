@@ -27,6 +27,7 @@ Copyright (C) 2023 by xurei <xureilab@gmail.com>
 class shaders_library_t {
     private:
         std::map<std::string, std::shared_ptr<effect_shader>> shaders;
+        std::map<std::string, std::string> errors;
         std::shared_ptr<effect_shader> fallback_shader;
 
         std::shared_ptr<effect_shader> load_shader_file(const std::string &path);
@@ -35,6 +36,7 @@ class shaders_library_t {
         void load();
 
         std::shared_ptr<effect_shader> get(const std::string &path);
+        std::string get_error(const std::string &path) const;
 
         std::string get_shader_path(const std::string &path);
 

@@ -37,7 +37,8 @@ struct shadertastic_effect_t {
     std::vector<effect_parameter_prev_frame *> prev_frames_to_keep{};
 
     params_list effect_params;
-    std::shared_ptr<effect_shader> main_shader = nullptr;
+    std::shared_ptr<effect_shader> main_shader{};
+    std::string error_str{};
 
     shadertastic_effect_t(std::string name_, std::string path_): name(std::move(name_)), path(std::move(path_)) {}
 

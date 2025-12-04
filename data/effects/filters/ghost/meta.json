@@ -20,7 +20,7 @@
     {
       "name": "prev_tex",
       "type": "prev_frame",
-      "step": 0
+      "step": 1
     }
   ]
 }

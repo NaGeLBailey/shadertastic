@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added json-schema and d.ts files for reference and IDE support
 - Added `frame_index` parameter, counting the number of frames since the transition started or the effect is visible (#ST-36)
 - `is_studio_mode` parameter, mostly for development purpose (#ST-38)
+- Show compile errors in the UI (#ST-39) 
 
 ### Fixed
 - Fixed `obs_get_source_properties("shadertastic_transition")` and `obs_get_source_properties("shadertastic_filter")` crashing OBS
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Replaced CMake build with newest template from OBS 30.2: https://github.com/obsproject/obs-plugintemplate/commit/7c017427c9ee2accc74be525e3cbf2ace5549b6c (#ST-5)
 - Migrated `input_type` option as parameter `time` (#ST-34)
+- Migrated `input_facedetection` option as parameter `facetracking` (#ST-35)
 - Moved export buttons above the about box
 - Face tracking: Slightly improved the crop192 filter
 - Face tracking: slight performance improvement & do not execute the face mesh if a face is not detected

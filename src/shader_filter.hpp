@@ -18,6 +18,7 @@
 #ifndef SHADERTASTIC_SHADER_FILTER_HPP
 #define SHADERTASTIC_SHADER_FILTER_HPP
 
+// ReSharper disable CppNonInlineFunctionDefinitionInHeaderFile
 // ReSharper disable CppDFAConstantParameter
 
 #include <obs-module.h>
@@ -146,6 +147,7 @@ inline void shadertastic_filter_update(void *data, obs_data_t *settings) {
     }
 
     if (s->selected_effect != nullptr) {
+        obs_data_set_string(settings, (std::string(selected_effect_name) + "__compile_error").c_str(), s->selected_effect->error_str.c_str());
         //debug("Selected Effect: %s", selected_effect_name);
         for (auto param: s->selected_effect->effect_params) {
             std::string full_param_name = param->get_full_param_name(selected_effect_name);
@@ -341,24 +343,29 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
     for (auto& [effect_name, effect] : *(s->effects)) {
         const char *effect_label = effect.label.c_str();
         obs_properties_t *effect_group = obs_properties_create();
-        obs_properties_t *warning_group = nullptr;
         //obs_properties_add_text(effect_group, "", effect_name, OBS_TEXT_INFO);
 
-//        if (effect.input_time) {
-//            obs_properties_add_float_slider(effect_group, get_full_param_name_static(effect_name, std::string("speed")).c_str(), "Speed", 0.0, 1.0, 0.01);
-//            obs_properties_add_bool(effect_group, get_full_param_name_static(effect_name, std::string("reset_time_on_show")).c_str(), "Reset time on visibility toggle");
-//        }
+        if (!effect.error_str.empty()) {
+            obs_properties_t *error_group = obs_properties_create();
+            auto prop = obs_properties_add_text(
+                error_group,
+                (effect_name + "__compile_error").c_str(),
+                effect.error_str.c_str(),
+                OBS_TEXT_MULTILINE
+            );
+            obs_property_text_set_monospace(prop, true);
+            obs_property_text_set_info_type(prop, OBS_TEXT_INFO_ERROR);
+
+            obs_properties_add_group(props, (effect_name + "__warning").c_str(), "⚠ Shader error", OBS_GROUP_NORMAL, error_group);
+            if (s->selected_effect != &effect) {
+                obs_property_set_visible(obs_properties_get(props, (effect_name + "__warning").c_str()), false);
+            }
+        }
 
         for (auto param: effect.effect_params) {
             std::string full_param_name = param->get_full_param_name(effect_name);
             if (!param->is_dev_mode() || shadertastic_settings().dev_mode_enabled) {
                 param->render_property_ui(full_param_name.c_str(), effect_group);
-            }
-        }
-        if (warning_group) {
-            obs_properties_add_group(props, (effect_name + "__warning").c_str(), "⚠ Warning", OBS_GROUP_NORMAL, warning_group);
-            if (s->selected_effect != &effect) {
-                obs_property_set_visible(obs_properties_get(props, (effect_name + "__warning").c_str()), false);
             }
         }
         obs_properties_add_group(props, (effect_name + "__params").c_str(), effect_label, OBS_GROUP_NORMAL, effect_group);

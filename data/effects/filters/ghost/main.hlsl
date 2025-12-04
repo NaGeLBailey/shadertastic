@@ -11,6 +11,7 @@ uniform int current_step;      // index of current step (for multistep effects)
 
 // Specific parameters of the shader. They must be defined in the meta.json file next to this one.
 uniform float ghost_strength;
+uniform texture2d prev_tex;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -43,11 +44,22 @@ VertData VSDefault(VertData v_in)
 
 float4 EffectLinear(float2 uv)
 {
-    return lerp(
-        image.Sample(textureSampler, uv),
-        prev_tex.Sample(textureSampler, uv),
-        ghost_strength
-    );
+    if (current_step == 0) {
+        float s = pow(ghost_strength, 0.5);
+        return lerp(
+            image.Sample(textureSampler, uv),
+            prev_tex.Sample(textureSampler, uv),
+            s
+        );
+    }
+    else {
+        return tex_interm.Sample(textureSampler, uv);
+        /*return lerp(
+            image.Sample(textureSampler, uv),
+            tex_interm.Sample(textureSampler, uv),
+            ghost_strength
+        );*/
+    }
 }
 //----------------------------------------------------------------------------------------------------------------------
 
