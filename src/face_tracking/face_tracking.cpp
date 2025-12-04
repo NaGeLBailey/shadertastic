@@ -85,8 +85,6 @@ void face_tracking_create(std::unique_ptr<face_tracking_state> &s) {
 
     onnxmediapipe::ModelsProvider::initialize();
 
-    s->facelandmark_results_counter = 0;
-
     s->crop_shader = std::make_unique<FaceTrackingCropShader>();
 
     obs_enter_graphics();
@@ -616,8 +614,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
         return;
     }
 
-    s->facelandmark_results_counter++;
-    size_t results_index = s->facelandmark_results_counter % FACEDETECTION_NB_ITERATIONS;
+    size_t results_index = 0;
 
     bool face_found = true;
 
@@ -671,7 +668,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
         debug("lost track !");
     }
 
-    if (s->facelandmark_results_counter <= FACEDETECTION_NB_ITERATIONS || !s->facelandmark_results_display_results) {
+    if (!s->facelandmark_results_display_results) {
         /* nothing to do */
     }
     else {
@@ -808,24 +805,6 @@ cv::Mat face_tracking_get_image_for_detection(face_tracking_state *s, obs_source
 
 cv::Mat face_tracking_get_image_for_mesh(face_tracking_state *s, obs_source_t *target_source, float2 &roi_center, float2 &roi_size, float rotation) {
     return s->crop_shader->getCroppedImage(target_source, roi_center, roi_size, rotation);
-}
-
-void face_tracking_render(face_tracking_state *s, effect_shader *main_shader) {
-    if (s->facelandmark_results_counter <= FACEDETECTION_NB_ITERATIONS || !s->facelandmark_results_display_results) {
-        try_gs_effect_set_bool("fd_face_found", main_shader->param_fd_face_found, false);
-        try_gs_effect_set_vec2("fd_face_tl", main_shader->param_fd_face_tl, &no_bounding_box.point1);
-        try_gs_effect_set_vec2("fd_face_br", main_shader->param_fd_face_br, &no_bounding_box.point2);
-    }
-    else {
-        try_gs_effect_set_bool("fd_face_found", main_shader->param_fd_face_found, true);
-        {
-            auto bbox = face_tracking_get_bounding_box(&s->average_results, not_lips_eyes_indices, 310);
-            try_gs_effect_set_vec2("fd_face_tl", main_shader->param_fd_face_tl, &bbox.point1);
-            try_gs_effect_set_vec2("fd_face_br", main_shader->param_fd_face_br, &bbox.point2);
-            //debug("Face: %f %f %f %f", bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
-        }
-        try_gs_effect_set_texture("fd_points_tex", main_shader->param_fd_points_tex, s->fd_points_texture);
-    }
 }
 //----------------------------------------------------------------------------------------------------------------------
 

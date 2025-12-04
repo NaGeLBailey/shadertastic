@@ -48,7 +48,8 @@ class effect_parameter_time : public effect_parameter {
             return PARAM_DATATYPE_TIME;
         }
 
-        void initialize_params(obs_data_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+            UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
 
             // reset_on_show field
@@ -85,20 +86,18 @@ class effect_parameter_time : public effect_parameter {
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {
-            UNUSED_PARAMETER(settings);
-            UNUSED_PARAMETER(full_param_name);
             obs_data_set_default_double(settings, get_full_param_name_static(full_param_name, std::string("speed")).c_str(), default_speed);
             obs_data_set_default_bool(settings, get_full_param_name_static(full_param_name, std::string("reset_on_show")).c_str(), false);
         }
 
         void render_property_ui(const char *full_param_name, obs_properties_t *props) override {
             if (show_speed_ui) {
-                obs_properties_add_float_slider(props, get_full_param_name_static(full_param_name, "speed").c_str(), speed_label.c_str(),
+                obs_properties_add_float_slider(props, get_full_subparam_name_static(full_param_name, "speed").c_str(), speed_label.c_str(),
                     min_speed, max_speed, 0.001);
             }
             if (reset_on_show_type == PROMPT) {
                 obs_property_t *list_ui = obs_properties_add_list(
-                    props, get_full_param_name_static(full_param_name, "reset_on_show").c_str(), "On filter visibility toggle:",
+                    props, get_full_subparam_name_static(full_param_name, "reset_on_show").c_str(), "On filter visibility toggle:",
                     OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_BOOL
                 );
                 obs_property_list_add_bool(list_ui, "Do nothing", false);

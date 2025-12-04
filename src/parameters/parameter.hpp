@@ -21,9 +21,14 @@
 #include "parameter_datatype.hpp"
 #include "../try_gs_effect_set.h"
 #include "../shadertastic_common.hpp"
+#include "../shader/shader.h"
 
 static std::string get_full_param_name_static(const std::string &effect_name, const std::string &param_name) {
     return effect_name + '.' + param_name;
+}
+
+static std::string get_full_subparam_name_static(const std::string &effect_name, const std::string &param_name) {
+    return effect_name + '_' + param_name;
 }
 
 class effect_parameter {
@@ -37,19 +42,39 @@ class effect_parameter {
         size_t data_size;
 
     public:
-        effect_parameter(size_t data_size, gs_eparam_t *shader_param) {
+        /**
+         * Single variable constructor. This is the default. It will initialize memory for one fixed-size
+         * data type, typically int or float.
+         * @param data_size the size of the data
+         * @param shader_param
+         */
+        effect_parameter(const size_t data_size, gs_eparam_t *shader_param) {
             this->data_size = data_size;
             this->shader_param = shader_param;
             this->data = bmalloc(data_size);
         }
 
+        /**
+         * Multi variables constructor. This one will not initialize any memory, it's up to the
+         * child class to handle its own shader variables
+         */
+        explicit effect_parameter(const effect_shader *shader) {
+            UNUSED_PARAMETER(shader);
+            /* no-op by default */
+            this->data_size = 0;
+            this->shader_param = nullptr;
+            this->data = nullptr;
+        }
+
         virtual ~effect_parameter() {
-            bfree(this->data);
+            if (this->data != nullptr) {
+                bfree(this->data);
+            }
         }
 
         virtual effect_param_datatype type() = 0;
 
-        [[nodiscard]] inline bool is_dev_mode() const {
+        [[nodiscard]] bool is_dev_mode() const {
             return devmode;
         }
 
@@ -76,14 +101,19 @@ class effect_parameter {
         /**
          * Called in the factory, after creation of the parameter.
          * This is where you should set the attributes of the parameter and their default values.
-         * BE CAREFUL : they are NOT the default values that you see in the meta files, but the
-         *   default values of the attributes that a parameter must have. For example, a int parameter
-         *   has a "slider" attribute, and by default it's not enabled. Hence, the default value of "slider"
-         *   is false if it's not mentioned in the metadata file of the effect.
+         *
+         * BE CAREFUL :
+         *   they are NOT the default values that you see in the meta files,
+         *   but the default values of the attributes a parameter must have.
+         *   For example, a `int` parameter has a boolean "slider" attribute,
+         *   to display a slider in the UI. By default it's not active.
+         *   Hence, the default value of "slider" is false if it's
+         *   not otherwise mentioned in the metadata.
+         * @param shader
          * @param metadata
          * @param effect_path
          */
-        virtual void initialize_params(obs_data_t *metadata, const std::string &effect_path) = 0;
+        virtual void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) = 0;
 
         /**
          * This is where you should set the defaults as explicitly specified in the metadata.
@@ -101,32 +131,29 @@ class effect_parameter {
         virtual void render_property_ui(const char *effect_name, obs_properties_t *props) = 0;
 
         /**
-         * Update function of the parameter, will be called when a filter is laoded or when the
-         * value is changed through the UI or some OBS internal call.
+         * Update function of the parameter, will be called when a filter is loaded or when the
+         * value is changed through the UI or an OBS internal call.
          * @param settings
          * @param full_param_name
          */
         virtual void set_data_from_settings(obs_data_t *settings, const char *full_param_name) = 0;
 
-        std::string get_name() {
+        [[nodiscard]] std::string get_name() {
             return name;
         }
 
-        std::string get_full_param_name(const char *effect_name) {
-            std::string effect_name_str = std::string(effect_name);
+        [[nodiscard]] std::string get_full_param_name(const char *effect_name) const {
+            const std::string effect_name_str = std::string(effect_name);
             return get_full_param_name(effect_name_str);
         }
-        std::string get_full_param_name(const std::string &effect_name) {
+        [[nodiscard]] std::string get_full_param_name(const std::string &effect_name) const {
             return get_full_param_name_static(effect_name, this->name);
         }
 
-        gs_eparam_t * get_shader_param() {
-            return shader_param;
-        }
         [[nodiscard]] size_t get_data_size() const {
             return data_size;
         }
-        inline void * get_data() {
+        [[nodiscard]] void * get_data() const {
             return data;
         }
 

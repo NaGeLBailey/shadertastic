@@ -20,6 +20,7 @@
 #include "effect.h"
 #include "logging_functions.hpp"
 #include "try_gs_effect_set.h"
+#include "parameters/parameter_facetracking.hpp"
 #include "parameters/parameter_factory.h"
 #include "shader/shaders_library.h"
 #include "util/file_util.h"
@@ -59,19 +60,26 @@ void shadertastic_effect_t::load() {
         obs_data_set_default_int(metadata, "steps", 1);
         nb_steps = (int)obs_data_get_int(metadata, "steps");
 
-        obs_data_set_default_bool(metadata, "input_time", false);
-        legacy_input_time = obs_data_get_bool(metadata, "input_time");
-
-        obs_data_set_default_bool(metadata, "input_facedetection", false);
-        input_facedetection = obs_data_get_bool(metadata, "input_facedetection");
-
         obs_data_array_t *parameters = obs_data_get_array(metadata, "parameters");
         if (parameters == nullptr) {
             warn("No parameters specified for effect %s", name.c_str());
             parameters = obs_data_array_create();
         }
 
+        // LEGACY - input_facedetection is deprecated.
+        obs_data_set_default_bool(metadata, "input_facedetection", false);
+        legacy_input_facedetection = obs_data_get_bool(metadata, "input_facedetection");
+        if (legacy_input_facedetection) {
+            obs_data_t *param_metadata = obs_data_create();
+            obs_data_set_string(param_metadata, "name", "fd");
+            obs_data_set_string(param_metadata, "type", "facetracking");
+            obs_data_array_insert(parameters, 0, param_metadata);
+            obs_data_release(param_metadata);
+        }
+
         // LEGACY - input_time is deprecated. Migrating it as a parameter
+        obs_data_set_default_bool(metadata, "input_time", false);
+        legacy_input_time = obs_data_get_bool(metadata, "input_time");
         if (legacy_input_time) {
             obs_data_t *param_metadata = obs_data_create();
             obs_data_set_string(param_metadata, "name", "time");
@@ -91,12 +99,11 @@ void shadertastic_effect_t::load() {
 
         for (size_t i=0; i < nb_parameters; i++) {
             obs_data_t *param_metadata = obs_data_array_item(parameters, i);
-            const char *param_name = obs_data_get_string(param_metadata, "name");
-            gs_eparam_t *shader_param = main_shader->get_param_by_name(param_name);
-            effect_parameter *effect_param = parameter_factory.create(name, this->path, shader_param, param_metadata);
+            effect_parameter *effect_param = effect_parameter_factory::create(name, this->path, main_shader.get(), param_metadata);
 
             if (effect_param != nullptr) {
-                if (effect_param->type() == PARAM_DATATYPE_PREV_FRAME) {
+                auto param_type = effect_param->type();
+                if (param_type == PARAM_DATATYPE_PREV_FRAME) {
                     effect_parameter_prev_frame *effect_param_prev_frame = dynamic_cast<effect_parameter_prev_frame *>(effect_param);
 
                     int step_to_keep = effect_param_prev_frame->step();
@@ -113,7 +120,10 @@ void shadertastic_effect_t::load() {
                         prev_frames_to_keep[step_to_keep] = effect_param_prev_frame;
                     }
                 }
-                std::string param_name_str = std::string(param_name);
+                else if (param_type == PARAM_DATATYPE_FACETRACKING) {
+                    use_facetracking = true;
+                }
+                std::string param_name_str = obs_data_get_string(param_metadata, "name");
                 effect_parameter *previous_param = previous_effect_params.get(param_name_str);
                 if (previous_param != nullptr) {
                     if (previous_param->get_data_size() == effect_param->get_data_size()) {

@@ -18,7 +18,6 @@
 #ifndef SHADERTASTIC_HPP
 #define SHADERTASTIC_HPP
 
-#include "face_tracking/face_tracking_state.h"
 #include "shadertastic_common.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -59,9 +58,6 @@ struct shadertastic_filter : public shadertastic_common {
     float rand_seed{};
     uint32_t width{}, height{};
     bool should_reload = false;
-
-    // Face detection state
-    std::unique_ptr<face_tracking_state> face_tracking{};
 
     void release() {
         if (this->effects != nullptr) {

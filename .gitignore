@@ -23,6 +23,7 @@ cmake-build-*/
 build/
 build-prod/
 build_*/
+meta.json.schema.json
 
 # Development files
 *.mp4

@@ -18,10 +18,10 @@
 #ifndef SHADERTASTIC_SHADER_FILTER_HPP
 #define SHADERTASTIC_SHADER_FILTER_HPP
 
+// ReSharper disable CppDFAConstantParameter
+
 #include <obs-module.h>
 #include <QApplication>
-#include <QClipboard>
-#include <QMessageBox>
 #include "effect.h"
 #include "face_tracking/face_tracking.h"
 #include "settings.h"
@@ -37,7 +37,7 @@ static shadertastic_filter *shadertastic_no_filter = nullptr;
 static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *source);
 //----------------------------------------------------------------------------------------------------------------------
 
-static inline shadertastic_filter* shadertastic_filter_cast(void *data) {
+static shadertastic_filter* shadertastic_filter_cast(void *data) {
     if (data == nullptr) {
         if (shadertastic_no_filter == nullptr) {
             obs_data_t *no_filter_settings = obs_data_create();
@@ -51,10 +51,10 @@ static inline shadertastic_filter* shadertastic_filter_cast(void *data) {
 //----------------------------------------------------------------------------------------------------------------------
 
 static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *source) {
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(bzalloc(sizeof(struct shadertastic_filter)));
+    shadertastic_filter *s = static_cast<shadertastic_filter*>(bzalloc(sizeof(struct shadertastic_filter)));
     s->source = source;
     s->effects = new shadertastic_effects_map_t();
-    s->rand_seed = (float)rand() / (float)RAND_MAX;
+    s->rand_seed = static_cast<float>(rand()) / static_cast<float>(RAND_MAX); // NOLINT(*-msc50-cpp)
     s->frame_index = 0;
 
     // FIXME getting the root source doesn't work here :( it would be great for debugging, but obs_filter_get_parent() is not valid outside of video_render, filter_audio, filter_video, and filter_remove callbacks.
@@ -107,7 +107,7 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
 //----------------------------------------------------------------------------------------------------------------------
 
 static void shadertastic_filter_destroy(void *data) {
-    struct shadertastic_filter *s = static_cast<shadertastic_filter*>(data);
+    shadertastic_filter *s = shadertastic_filter_cast(data);
 
     obs_enter_graphics();
     gs_texrender_destroy(s->interm_texrender[0]);
@@ -119,19 +119,19 @@ static void shadertastic_filter_destroy(void *data) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t shadertastic_filter_getwidth(void *data) {
-    struct shadertastic_filter *s = shadertastic_filter_cast(data);
+inline uint32_t shadertastic_filter_getwidth(void *data) {
+    const shadertastic_filter *s = shadertastic_filter_cast(data);
     return s->width;
 }
 
-uint32_t shadertastic_filter_getheight(void *data) {
-    struct shadertastic_filter *s = shadertastic_filter_cast(data);
+inline uint32_t shadertastic_filter_getheight(void *data) {
+    const shadertastic_filter *s = shadertastic_filter_cast(data);
     return s->height;
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-void shadertastic_filter_update(void *data, obs_data_t *settings) {
-    struct shadertastic_filter *s = shadertastic_filter_cast(data);
+inline void shadertastic_filter_update(void *data, obs_data_t *settings) {
+    shadertastic_filter *s = shadertastic_filter_cast(data);
     //debug("Update : %s", obs_data_get_json(settings));
 
     if (s->should_reload) {
@@ -157,14 +157,14 @@ void shadertastic_filter_update(void *data, obs_data_t *settings) {
 //----------------------------------------------------------------------------------------------------------------------
 
 static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
-    struct shadertastic_filter *s = shadertastic_filter_cast(data);
+    shadertastic_filter *s = shadertastic_filter_cast(data);
     obs_source_t *target = obs_filter_get_target(s->source);
 
     s->width = obs_source_get_base_width(target);
     s->height = obs_source_get_base_height(target);
 
     bool is_enabled = obs_source_enabled(s->source) && s->selected_effect != nullptr;
-    if (s->selected_effect && s->selected_effect->input_facedetection) {
+    if (s->selected_effect && s->selected_effect->use_facetracking) {
         if (s->face_tracking == nullptr) {
             face_tracking_create(s->face_tracking);
         }
@@ -193,47 +193,48 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
 void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     //debug("-----------------------------------------");
     UNUSED_PARAMETER(effect);
-    struct shadertastic_filter *s = shadertastic_filter_cast(data);
+    shadertastic_filter *s = shadertastic_filter_cast(data);
     float filter_time = (float)s->time;
 
-    const enum gs_color_space preferred_spaces[] = {
+    constexpr gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
         GS_CS_SRGB_16F,
         GS_CS_709_EXTENDED,
     };
     obs_source_t *target_source = obs_filter_get_target(s->source);
 
-    uint32_t cx = s->width;
-    uint32_t cy = s->height;
+    const uint32_t cx = s->width;
+    const uint32_t cy = s->height;
 
-    const enum gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
-    const enum gs_color_format format = gs_get_format_from_space(source_space);
+    const gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
+    const gs_color_format format = gs_get_format_from_space(source_space);
 
     shadertastic_effect_t *selected_effect = s->selected_effect;
     if (selected_effect != nullptr && selected_effect->main_shader != nullptr) {
-        if (selected_effect->input_facedetection && s->face_tracking != nullptr) {
+        if (selected_effect->use_facetracking && s->face_tracking != nullptr) {
             #ifdef DEV_MODE
             unsigned long tic = get_time_us();
             #endif
             face_tracking_tick(s->face_tracking.get(), target_source, s->delta_time);
 
-            debug("Facetracking time %lu", get_time_us()-tic);
+            debug_trace("Facetracking time %lu", get_time_us()-tic);
         }
         gs_texture_t *interm_texture = shadertastic_transparent_texture;
+        selected_effect->set_params(nullptr, nullptr, s->frame_index, false, filter_time, s->delta_time, cx, cy, s->rand_seed);
         if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
             gs_blend_state_push();
             gs_blend_function_separate(
                 GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
                 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
             );
-            struct vec4 clear_color{0,0,0,0};
+            constexpr vec4 clear_color{0,0,0,0};
 
             for (int current_step=0; current_step < selected_effect->nb_steps; ++current_step) {
-                if (selected_effect->input_facedetection && s->face_tracking != nullptr) {
-                    face_tracking_render(s->face_tracking.get(), selected_effect->main_shader.get());
-                }
+                /*if (selected_effect->legacy_input_facedetection && s->face_tracking != nullptr) {
+                    legacy_face_tracking_render(s->face_tracking.get(), selected_effect->main_shader.get());
+                }*/
                 bool texrender_ok = true;
-                bool is_interm_step = (current_step < selected_effect->nb_steps - 1);
+                const bool is_interm_step = (current_step < selected_effect->nb_steps - 1);
 
                 if (is_interm_step) {
                     s->interm_texrender_buffer = (s->interm_texrender_buffer+1) & 1;
@@ -250,7 +251,6 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
                 }
 
                 if (texrender_ok) {
-                    selected_effect->set_params(nullptr, nullptr, s->frame_index, false, filter_time, s->delta_time, cx, cy, s->rand_seed);
                     selected_effect->set_step_params(current_step, interm_texture);
 
                     selected_effect->main_shader->render(s->source, cx, cy);
@@ -281,10 +281,8 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
 //----------------------------------------------------------------------------------------------------------------------
 
 bool shadertastic_filter_properties_change_effect_callback(void *priv, obs_properties_t *props, obs_property_t *p, obs_data_t *data) {
-    UNUSED_PARAMETER(priv);
     UNUSED_PARAMETER(p);
-    UNUSED_PARAMETER(data);
-    struct shadertastic_filter *s = shadertastic_filter_cast(priv);
+    shadertastic_filter *s = shadertastic_filter_cast(priv);
 
     if (s->selected_effect != nullptr) {
         obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), false);
@@ -307,7 +305,7 @@ bool shadertastic_filter_properties_change_effect_callback(void *priv, obs_prope
 bool shadertastic_filter_reload_button_click(obs_properties_t *props, obs_property_t *property, void *data) {
     UNUSED_PARAMETER(props);
     UNUSED_PARAMETER(property);
-    struct shadertastic_filter *s = shadertastic_filter_cast(data);
+    shadertastic_filter *s = shadertastic_filter_cast(data);
 
     if (s->selected_effect != nullptr) {
         s->selected_effect->reload();
@@ -321,7 +319,7 @@ bool shadertastic_filter_reload_button_click(obs_properties_t *props, obs_proper
 }
 
 obs_properties_t *shadertastic_filter_properties(void *data) {
-    struct shadertastic_filter *s = shadertastic_filter_cast(data);
+    shadertastic_filter *s = shadertastic_filter_cast(data);
     obs_properties_t *props = obs_properties_create();
 
     obs_property_t *p;
@@ -386,8 +384,8 @@ void shadertastic_filter_get_defaults(obs_data_t *settings) {
     }
 }
 
-static enum gs_color_space shadertastic_filter_get_color_space(void *data, size_t count, const enum gs_color_space *preferred_spaces) {
-    struct shadertastic_filter *s = shadertastic_filter_cast(data);
+static gs_color_space shadertastic_filter_get_color_space(void *data, size_t count, const enum gs_color_space *preferred_spaces) {
+    shadertastic_filter *s = shadertastic_filter_cast(data);
     const enum gs_color_space source_space = obs_source_get_color_space(
         obs_filter_get_target(s->source),
         count, preferred_spaces
@@ -398,7 +396,7 @@ static enum gs_color_space shadertastic_filter_get_color_space(void *data, size_
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_filter_show(void *data) {
-    struct shadertastic_filter *s = shadertastic_filter_cast(data);
+    shadertastic_filter *s = shadertastic_filter_cast(data);
     shadertastic_effect_t *selected_effect = s->selected_effect;
     if (selected_effect != nullptr) {
         selected_effect->show();
@@ -407,7 +405,7 @@ void shadertastic_filter_show(void *data) {
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_filter_hide(void *data) {
-    struct shadertastic_filter *s = shadertastic_filter_cast(data);
+    shadertastic_filter *s = shadertastic_filter_cast(data);
     shadertastic_effect_t *selected_effect = s->selected_effect;
     if (selected_effect != nullptr) {
         selected_effect->hide();

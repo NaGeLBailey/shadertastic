@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <obs-module.h>
+#include "face_tracking/face_tracking_state.h"
 
 struct shadertastic_effect_t;
 typedef std::map<std::string, shadertastic_effect_t> shadertastic_effects_map_t;
@@ -16,6 +17,9 @@ struct shadertastic_common {
     int frame_index = 0;
     float time = 0.0;
     float delta_time = 0.0;
+
+    // Face tracking internal state
+    std::unique_ptr<face_tracking_state> face_tracking{};
 
     // Filter previous state (enabled/disabled)
     bool was_enabled = false;

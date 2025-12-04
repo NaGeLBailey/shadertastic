@@ -18,6 +18,8 @@
 #ifndef SHADERTASTIC_SHADER_H
 #define SHADERTASTIC_SHADER_H
 
+#include <obs-module.h>
+
 class effect_shader {
     private:
     gs_effect_t *gs_effect = nullptr;
@@ -41,18 +43,14 @@ class effect_shader {
     gs_eparam_t *param_current_step = nullptr;
     gs_eparam_t *param_nb_steps = nullptr;
 
-    gs_eparam_t *param_fd_face_found = nullptr;
-    gs_eparam_t *param_fd_face_tl = nullptr;
-    gs_eparam_t *param_fd_face_br = nullptr;
-    gs_eparam_t *param_fd_points_tex = nullptr;
-
-    std::string path;
+    std::string path{};
+    std::string error_str{};
 
     ~effect_shader();
 
     bool load(const char *shader_path);
 
-    gs_eparam_t * get_param_by_name(const char *param_name);
+    gs_eparam_t * get_param_by_name(const char *param_name) const;
     bool loop(const char *tech_name);
 
     void render(obs_source_t *filter, uint32_t cx, uint32_t cy);

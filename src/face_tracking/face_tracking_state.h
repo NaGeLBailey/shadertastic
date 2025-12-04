@@ -18,7 +18,7 @@
 #ifndef SHADERTASTIC_FACE_TRACKING_STATE_H
 #define SHADERTASTIC_FACE_TRACKING_STATE_H
 
-constexpr size_t FACEDETECTION_NB_ITERATIONS = 2;
+constexpr size_t FACEDETECTION_NB_ITERATIONS = 1;
 
 #include <onnxruntime_cxx_api.h>
 #include "onnxmediapipe/face_mesh.h"
@@ -33,7 +33,6 @@ struct face_tracking_state {
     onnxmediapipe::FaceLandmarksResults facelandmark_results[FACEDETECTION_NB_ITERATIONS];
     onnxmediapipe::FaceLandmarksResults average_results;
     OneEuroFilter filters[3 * refined_landmarks_num_points];
-    size_t facelandmark_results_counter = 0;
     bool facelandmark_results_display_results = false;
 
     std::unique_ptr<FaceTrackingCropShader> crop_shader;

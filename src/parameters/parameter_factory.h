@@ -18,14 +18,14 @@
 #ifndef SHADERTASTIC_PARAMETER_FACTORY_H
 #define SHADERTASTIC_PARAMETER_FACTORY_H
 
+#include "parameter.hpp"
+
 class effect_parameter_factory {
     public:
-        effect_parameter *create(const std::string &effect_name, const std::string &effect_path, gs_eparam_t *shader_param, obs_data_t *param_metadata);
+        static effect_parameter *create(const std::string &effect_name, const std::string &effect_path, const effect_shader *main_shader, obs_data_t *param_metadata);
 
     private:
-        effect_param_datatype effect_parse_datatype(const char *datatype_str);
+        static effect_param_datatype effect_parse_datatype(const char *datatype_str);
 };
-
-inline effect_parameter_factory parameter_factory;
 
 #endif // SHADERTASTIC_PARAMETER_FACTORY_H

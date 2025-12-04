@@ -4,13 +4,13 @@
     "author_url": "http://about.xurei.io"
   },
   "metafileVersion": 1,
-  "label": "[Face Detection] Reference",
+  "label": "[Face Detection] Reference (legacy)",
   "steps": 1,
   "input_facedetection": true,
   "parameters": [
     {
       "type": "facetracking",
-      "name": "facetracking"
+      "name": "face"
     },
     {
       "name": "show_mesh_face",

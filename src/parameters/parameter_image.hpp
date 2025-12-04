@@ -77,7 +77,8 @@ class effect_parameter_image : public effect_parameter {
             return PARAM_DATATYPE_IMAGE;
         }
 
-        void initialize_params(obs_data_t *metadata, const std::string &effect_path) override {
+        void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
+            UNUSED_PARAMETER(shader);
             obs_data_set_default_string(metadata, "default", "");
             obs_data_set_default_bool(metadata, "allow_custom", true);
             default_array = obs_data_array_create();

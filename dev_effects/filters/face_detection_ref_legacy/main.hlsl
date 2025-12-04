@@ -10,10 +10,10 @@ uniform int current_step;      // index of current step (for multistep effects)
 */
 
 // Specific parameters of the shader. They must be defined in the meta.json file next to this one.
-uniform bool facetracking_face_found;
-uniform float2 facetracking_bbox_tl;
-uniform float2 facetracking_bbox_br;
-uniform texture2d facetracking_points_tex;
+uniform bool fd_face_found;
+uniform float2 fd_bbox_tl;
+uniform float2 fd_bbox_br;
+uniform texture2d fd_points_tex;
 uniform bool show_tex;
 uniform bool show_mesh_face;
 uniform bool show_mesh_lips;
@@ -55,7 +55,7 @@ VertData VSDefault(VertData v_in)
 float4 EffectLinear(float2 uv)
 {
     if (show_tex && uv.y < 0.05) {
-        float4 px = facetracking_points_tex.Sample(textureSampler, uv);
+        float4 px = fd_points_tex.Sample(textureSampler, uv);
         return px;
     }
 
@@ -67,15 +67,15 @@ float4 EffectLinear(float2 uv)
     float2 uv_ortho = uv * orthoCorrection;
 
     if (show_eyes) {
-        float2 fd_leye_center = facetracking_points_tex.Sample(pointsSampler, float2((468.5)/478.0, 0)).xy * orthoCorrection;
-        float2 fd_leye_top = facetracking_points_tex.Sample(pointsSampler, float2((470.5)/478.0, 0)).xy * orthoCorrection;
+        float2 fd_leye_center = fd_points_tex.Sample(pointsSampler, float2((468.5)/478.0, 0)).xy * orthoCorrection;
+        float2 fd_leye_top = fd_points_tex.Sample(pointsSampler, float2((470.5)/478.0, 0)).xy * orthoCorrection;
         float fd_leye_radius = abs(fd_leye_center.y - fd_leye_top.y);
         if (distance(uv_ortho, fd_leye_center) < fd_leye_radius) {
             return lerp(px, float4(1.0, 0.0, 0.0, 1.0), 0.4);
         }
 
-        float2 fd_reye_center = facetracking_points_tex.Sample(pointsSampler, float2((473.5)/478.0, 0)).xy * orthoCorrection;
-        float2 fd_reye_top = facetracking_points_tex.Sample(pointsSampler, float2((475.5)/478.0, 0)).xy * orthoCorrection;
+        float2 fd_reye_center = fd_points_tex.Sample(pointsSampler, float2((473.5)/478.0, 0)).xy * orthoCorrection;
+        float2 fd_reye_top = fd_points_tex.Sample(pointsSampler, float2((475.5)/478.0, 0)).xy * orthoCorrection;
         float fd_reye_radius = abs(fd_reye_center.y - fd_reye_top.y);
         if (distance(uv_ortho, fd_reye_center) < fd_reye_radius) {
             return lerp(px, float4(1.0, 1.0, 0.0, 1.0), 0.4);
@@ -84,31 +84,31 @@ float4 EffectLinear(float2 uv)
 
     if (show_bounding_box) {
         if (
-            (facetracking_bbox_tl.x - upixel <= uv.x && uv.x <= facetracking_bbox_tl.x + upixel) ||
-            (facetracking_bbox_br.x - upixel <= uv.x && uv.x <= facetracking_bbox_br.x + upixel)
+            (fd_bbox_tl.x - upixel <= uv.x && uv.x <= fd_bbox_tl.x + upixel) ||
+            (fd_bbox_br.x - upixel <= uv.x && uv.x <= fd_bbox_br.x + upixel)
         ) {
-            if (facetracking_bbox_tl.y <= uv.y && uv.y <= facetracking_bbox_br.y) {
+            if (fd_bbox_tl.y <= uv.y && uv.y <= fd_bbox_br.y) {
                 return float4(0.6, 0.1, 0.7, 1.0);
             }
         }
         if (
-            (facetracking_bbox_tl.y - vpixel <= uv.y && uv.y <= facetracking_bbox_tl.y + vpixel) ||
-            (facetracking_bbox_br.y - vpixel <= uv.y && uv.y <= facetracking_bbox_br.y + vpixel)
+            (fd_bbox_tl.y - vpixel <= uv.y && uv.y <= fd_bbox_tl.y + vpixel) ||
+            (fd_bbox_br.y - vpixel <= uv.y && uv.y <= fd_bbox_br.y + vpixel)
         ) {
-            if (facetracking_bbox_tl.x <= uv.x && uv.x <= facetracking_bbox_br.x) {
+            if (fd_bbox_tl.x <= uv.x && uv.x <= fd_bbox_br.x) {
                 return float4(0.6, 0.1, 0.7, 1.0);
             }
         }
     }
 
-    if (facetracking_bbox_tl.x - upixel <= uv.x && uv.x <= facetracking_bbox_br.x + upixel && facetracking_bbox_tl.y - vpixel <= uv.y && uv.y <= facetracking_bbox_br.y + vpixel) {
+    if (fd_bbox_tl.x - upixel <= uv.x && uv.x <= fd_bbox_br.x + upixel && fd_bbox_tl.y - vpixel <= uv.y && uv.y <= fd_bbox_br.y + vpixel) {
         mult = float4(1.0, 1.0, 1.0, 1.0);
 
         #ifdef _D3D11
         [loop]
         #endif
         for (int i=0; i<478; ++i) {
-            float4 px2 = facetracking_points_tex.Sample(pointsSampler, float2((i + 0.5)/478.0, 0));
+            float4 px2 = fd_points_tex.Sample(pointsSampler, float2((i + 0.5)/478.0, 0));
             px2[2] = 1.0;
             px2[3] = 1.0;
 

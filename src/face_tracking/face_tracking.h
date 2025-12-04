@@ -60,8 +60,6 @@ cv::Mat face_tracking_get_image_for_detection(face_tracking_state *s, obs_source
 
 cv::Mat face_tracking_get_image_for_mesh(face_tracking_state *s, obs_source_t *target_source, float2 &roi_topleft, float2 &roi_size, float rotation);
 
-void face_tracking_render(face_tracking_state *s, effect_shader *main_shader);
-
 void face_tracking_destroy(std::unique_ptr<face_tracking_state> &s);
 
 #endif // SHADERTASTIC_FACE_TRACKING_H

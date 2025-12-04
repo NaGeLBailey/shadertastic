@@ -32,7 +32,8 @@ struct shadertastic_effect_t {
     std::string label;
     int nb_steps{};
     bool legacy_input_time = false;
-    bool input_facedetection = false;
+    bool legacy_input_facedetection = false;
+    bool use_facetracking = false;
     std::vector<effect_parameter_prev_frame *> prev_frames_to_keep{};
 
     params_list effect_params;

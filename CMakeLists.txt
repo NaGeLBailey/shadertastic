@@ -137,7 +137,7 @@ file(GLOB_RECURSE shaders_HLSL
 )
 set_source_files_properties(SOURCE ${shaders_HLSL} PROPERTIES VS_SETTINGS "ExcludedFromBuild=true")
 
-# Active std:c++20
+# Activate std:c++20
 if(MSVC)
   add_definitions(/std:c++20)
 endif()
