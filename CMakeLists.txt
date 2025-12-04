@@ -101,9 +101,9 @@ elseif(OS_LINUX)
   ")
 
   # Packaging - force the dependencies so Qt is not taken with it; OBS will have it anyways
-  set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF)
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.38), libgcc-s1 (>= 4.0), libqt6core6t64 (>= 6.4.0), libstdc++6 (>= 13.1), obs-studio, zlib1g (>= 1:1.1.4)")
 endif()
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF CACHE BOOL "" FORCE)
+set(CPACK_DEBIAN_${PROJECT_NAME}_PACKAGE_DEPENDS "libc6 (>= 2.38), libgcc-s1 (>= 4.0), libqt6core6t64 (>= 6.4.0), libstdc++6 (>= 13.1), obs-studio, zlib1g (>= 1:1.1.4)" CACHE STRING "" FORCE)
 
 # libzip
 # Disable warnings for libzip
