@@ -31,13 +31,18 @@ namespace onnxmediapipe
 
             // TODO maybe add a global setting in OBS to allocate the number of threads ?
             Ort::ThreadingOptions ortThreadingOptions;
-            ortThreadingOptions.SetGlobalInterOpNumThreads(
-                std::min(
-                    2, // No more than this many threads
-                    std::max(1, (int) std::thread::hardware_concurrency() / 4) // A quarter of the threads that can concurrently run on the CPU
-                )
+            int num_cores = (int)std::thread::hardware_concurrency();
+            int num_threads = std::clamp(
+                num_cores / 4,  // A quarter of the threads that can concurrently run on the CPU
+                1,
+                4
             );
-            ortThreadingOptions.SetGlobalIntraOpNumThreads(1);
+            ortThreadingOptions.SetGlobalInterOpNumThreads(1);
+            ortThreadingOptions.SetGlobalIntraOpNumThreads(num_threads);
+            if (num_cores > 4) {
+                // Enable spin control to reduce latency and jitter
+                ortThreadingOptions.SetGlobalSpinControl(true);
+            }
             ort_env.reset(new Ort::Env(ortThreadingOptions, OrtLoggingLevel::ORT_LOGGING_LEVEL_WARNING, instanceName));
         }
     }

@@ -37,12 +37,9 @@ namespace onnxmediapipe
         if (!ortSession) {
             Ort::SessionOptions sessionOptions;
             sessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
-//            sessionOptions.SetInterOpNumThreads(2);
-//            sessionOptions.SetIntraOpNumThreads(3);
             sessionOptions.EnableCpuMemArena();
             sessionOptions.EnableMemPattern();
-            //sessionOptions.EnableProfiling();
-//            sessionOptions.DisablePerSessionThreads();
+            sessionOptions.DisablePerSessionThreads();
             sessionOptions.SetExecutionMode(ExecutionMode::ORT_PARALLEL);
 
             // TODO sessionOptions.AppendExecutionProvider_DML

@@ -38,11 +38,8 @@ namespace onnxmediapipe
         if (!ortSession) {
             Ort::SessionOptions sessionOptions;
             sessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
-//            sessionOptions.SetInterOpNumThreads(2);
-//            sessionOptions.SetIntraOpNumThreads(2);
             sessionOptions.EnableCpuMemArena();
             sessionOptions.EnableMemPattern();
-//            sessionOptions.DisableMemPattern();
             sessionOptions.DisablePerSessionThreads();
             sessionOptions.SetExecutionMode(ExecutionMode::ORT_PARALLEL);
             //const char *model_data_path = obs_module_file("face_detection_models/face_landmarks_detector.onnx");
