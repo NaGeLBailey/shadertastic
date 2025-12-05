@@ -6,8 +6,8 @@ struct int2 {
     int y;
 };
 struct uint2 {
-    uint32_t x;
-    uint32_t y;
+    uint32_t x{};
+    uint32_t y{};
 };
 struct float2 {
     float x;

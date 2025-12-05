@@ -20,7 +20,6 @@
 
 constexpr size_t FACEDETECTION_NB_ITERATIONS = 1;
 
-#include <onnxruntime_cxx_api.h>
 #include "onnxmediapipe/face_mesh.h"
 #include "one_euro_filter.h"
 #include "face_tracking_crop_shader.h"

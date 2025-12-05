@@ -17,10 +17,8 @@
 
 #include <cstdarg>
 #include <string>
-#include <obs-module.h>
 
 #include "fdebug.h"
-#include "logging_functions.hpp"
 
 #if defined(DEV_MODE) && defined(DEV_LOG_PATH)
     // Opens the debug file for writing

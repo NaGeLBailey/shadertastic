@@ -2,11 +2,9 @@
 #include <util/platform.h>
 #include <QApplication>
 #include <QCheckBox>
-#include <QDialog>
 #include <QDoubleSpinBox>
 #include <QFileDialog>
 #include <QFormLayout>
-#include <QFrame>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>

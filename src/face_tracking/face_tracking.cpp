@@ -24,7 +24,6 @@
 #include "onnxmediapipe/models_provider.h"
 #include "face_tracking.h"
 #include "../logging_functions.hpp"
-#include "../try_gs_effect_set.h"
 #include "../settings.h"
 #include "../util/time_util.hpp"
 

@@ -10,6 +10,7 @@
 #define SETTING_ONE_EURO_DERIV_CUTOFF "one_euro_deriv_cutoff"
 
 #include <string>
+#include <vector>
 
 struct shadertastic_settings_t {
     // Path where the user can add their own effects

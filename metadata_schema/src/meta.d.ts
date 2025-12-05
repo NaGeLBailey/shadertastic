@@ -304,6 +304,7 @@ type param_time = param_common & {
          */
         max?: number,
         /**
+         * Default value to use in a new filter
          * @default: 1.0
          */
         default?: number,

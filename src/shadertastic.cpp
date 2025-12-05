@@ -24,20 +24,13 @@
 #include <obs-frontend-api.h>
 
 #include <QAction>
-#include <QCheckBox>
-#include <QFileDialog>
-#include <QFrame>
-#include <QLabel>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QSpacerItem>
 #include <QVBoxLayout>
-#include <QDoubleSpinBox>
 #include <util/platform.h>
 
 #include "version.h"
 
 #ifdef DEV_MODE
+// ReSharper disable once CppUnusedIncludeDirective
 #include "util/enum_util.hpp"
 #include "util/debug_util.hpp"
 #endif
@@ -50,6 +43,7 @@
 #include "shader/shaders_library.h"
 #include "shadertastic.hpp"
 #include "util/file_util.h"
+// ReSharper disable once CppUnusedIncludeDirective
 #include "util/time_util.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 

@@ -20,7 +20,6 @@
 
 #include <memory>
 #include <vector>
-#include <set>
 
 #include "params_list.hpp"
 #include "shader/shader.h"

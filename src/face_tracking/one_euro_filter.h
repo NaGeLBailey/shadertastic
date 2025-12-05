@@ -37,10 +37,6 @@
 #ifndef SHADERTASTIC_ONE_EURO_FILTER_H
 #define SHADERTASTIC_ONE_EURO_FILTER_H
 
-#include <iostream>
-#include <stdexcept>
-#include <cmath>
-#include <ctime>
 // -----------------------------------------------------------------
 // Utilities
 
@@ -61,7 +57,7 @@ public:
 
     float filterWithAlpha(float value, float alpha);
 
-    inline float filter(float value) {
+    float filter(float value) {
         return filterWithAlpha(value, alpha);
     }
 

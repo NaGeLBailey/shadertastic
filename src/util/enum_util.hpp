@@ -1,6 +1,8 @@
 #ifndef SHADERTASTIC_ENUM_UTIL_HPP
 #define SHADERTASTIC_ENUM_UTIL_HPP
 
+#include <obs-module.h>
+
 const char* gsColorFormatToString(gs_color_format format) {
     switch (format) {
         case GS_UNKNOWN:

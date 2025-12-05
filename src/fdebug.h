@@ -18,8 +18,6 @@
 #ifndef FDEBUG_H
 #define FDEBUG_H
 
-#include <cstdio>
-#include <cstdarg>
 #include <string>
 
 #if defined(DEV_MODE) && defined(DEV_LOG_PATH)
