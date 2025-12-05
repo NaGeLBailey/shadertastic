@@ -91,11 +91,11 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
         if (effect.legacy_input_time) {
             obs_data_set_default_double(settings, get_full_param_name_static(effect_name, "speed").c_str(), 0.1);
             double speed = obs_data_get_double(settings, get_full_param_name_static(effect_name, "speed").c_str());
-            obs_data_set_default_double(settings, get_full_param_name_static(effect_name, "time.speed").c_str(), speed);
+            obs_data_set_default_double(settings, get_full_param_name_static(effect_name, "time_speed").c_str(), speed);
 
             obs_data_set_default_bool(settings, get_full_param_name_static(effect_name, "reset_time_on_show").c_str(), false);
             bool reset_time_on_show = obs_data_get_bool(settings, get_full_param_name_static(effect_name, "reset_time_on_show").c_str());
-            obs_data_set_default_bool(settings, get_full_param_name_static(effect_name, "time.reset_time_on_show").c_str(), reset_time_on_show);
+            obs_data_set_default_bool(settings, get_full_param_name_static(effect_name, "time_reset_time_on_show").c_str(), reset_time_on_show);
         }
     }
 
@@ -160,20 +160,17 @@ inline void shadertastic_filter_update(void *data, obs_data_t *settings) {
 
 static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
     shadertastic_filter *s = shadertastic_filter_cast(data);
-    obs_source_t *target = obs_filter_get_target(s->source);
-
-    s->width = obs_source_get_base_width(target);
-    s->height = obs_source_get_base_height(target);
-
     bool is_enabled = obs_source_enabled(s->source) && s->selected_effect != nullptr;
+
     if (s->selected_effect && s->selected_effect->use_facetracking) {
         if (s->face_tracking == nullptr) {
             face_tracking_create(s->face_tracking);
         }
     }
-    s->time += deltatime_seconds;
-    s->delta_time = deltatime_seconds;
-    if (is_enabled && s->selected_effect) {
+    if (is_enabled) {
+        s->time += deltatime_seconds;
+        s->delta_time = deltatime_seconds;
+
         for (effect_parameter* param : s->selected_effect->effect_params) {
             if (param) {
                 param->tick(s);
@@ -205,6 +202,9 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     };
     obs_source_t *target_source = obs_filter_get_target(s->source);
 
+    obs_source_t *target = obs_filter_get_target(s->source);
+    s->width = obs_source_get_base_width(target);
+    s->height = obs_source_get_base_height(target);
     const uint32_t cx = s->width;
     const uint32_t cy = s->height;
 

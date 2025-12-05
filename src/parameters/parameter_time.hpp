@@ -118,9 +118,9 @@ class effect_parameter_time : public effect_parameter {
 
         void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
             if (reset_on_show_type == PROMPT) {
-                reset_on_show = obs_data_get_bool(settings, get_full_param_name_static(full_param_name, std::string("reset_on_show")).c_str());
+                reset_on_show = obs_data_get_bool(settings, get_full_subparam_name_static(full_param_name, "reset_on_show").c_str());
             }
-            speed = (float)obs_data_get_double(settings, get_full_param_name_static(full_param_name, std::string("speed")).c_str());
+            speed = (float)obs_data_get_double(settings, get_full_subparam_name_static(full_param_name, "speed").c_str());
         }
 };
 
