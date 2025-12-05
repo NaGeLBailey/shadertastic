@@ -34,6 +34,7 @@
  *
  */
 
+#include <stdexcept>
 #include "one_euro_filter.h"
 #include "../logging_functions.hpp"
 
