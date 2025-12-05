@@ -637,7 +637,6 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
         else {
             face_found = facemesh->RunFaceDetection(imageBGR);
         }
-        s->facelandmark_results_display_results = face_found;
         return;
     }
     debug_trace("B %lu", get_time_us()-tic);
@@ -721,6 +720,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
 
         float *texpoints;
         uint32_t linesize2 = 0;
+        debug_trace("G1 %lu", get_time_us()-tic);
         obs_enter_graphics();
         {
             gs_texture_map(s->fd_points_texture, (uint8_t **) (&texpoints), &linesize2);
@@ -728,6 +728,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
             gs_texture_unmap(s->fd_points_texture);
         }
         obs_leave_graphics();
+        debug_trace("G2 %lu", get_time_us()-tic);
         debug_trace("H %lu", get_time_us()-tic);
     }
 }

@@ -40,6 +40,8 @@ namespace onnxmediapipe
             sessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
 //            sessionOptions.SetInterOpNumThreads(2);
 //            sessionOptions.SetIntraOpNumThreads(2);
+            sessionOptions.EnableCpuMemArena();
+            sessionOptions.EnableMemPattern();
 //            sessionOptions.DisableMemPattern();
             sessionOptions.DisablePerSessionThreads();
             sessionOptions.SetExecutionMode(ExecutionMode::ORT_PARALLEL);
