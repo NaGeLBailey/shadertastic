@@ -314,18 +314,6 @@ float laserIntensity(float2 uv, float2 fd_eye_center, float width, float eyes_di
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-float3 perpendicularVector(float3 A, float3 B, float3 C) {
-    // Calculate the vectors AB and AC
-    float3 AB = B - A;
-    float3 AC = C - A;
-
-    // Calculate the cross product of AB and AC
-    float3 normal = cross(AB, AC);
-
-    return normalize(normal);
-}
-//----------------------------------------------------------------------------------------------------------------------
-
 float laserRay(float2 uv, float2 lineStart, float2 direction) {
     // Project vecToCurrent onto the lineVector to find the closest point on the line
     float2 lineDirNormalized = normalize(direction.xy);
@@ -396,23 +384,17 @@ float4 EffectLinear__step2(float2 uv) {
 //----------------------------------------------------------------------------------------------------------------------
 
 float4 EffectLinear__step3(float2 uv) {
-    float4 leye_point = fd_points_tex.Sample(pointsSampler, float2((33 + 0.5)/478.0, 0.0));
-    float4 reye_point = fd_points_tex.Sample(pointsSampler, float2((263 + 0.5)/478.0, 0.0));
-    float4 chin_point = fd_points_tex.Sample(pointsSampler, float2((152 + 0.5)/478.0, 0.0));
-    float3 direction = perpendicularVector(leye_point.xyz, reye_point.xyz, chin_point.xyz);
-
-    float4 ppx = image.Sample(textureSampler, uv);
-
-    if (no_effect_if_no_sound && audio_effect_level() == 0.0) {
-        return ppx;
-    }
-
+    float4 px = image.Sample(textureSampler, uv);
     if (!fd_face_found) {
-        return image.Sample(textureSampler, uv);
+        return px;
     }
+    if (no_effect_if_no_sound && audio_effect_level() == 0.0) {
+        return px;
+    }
+
     float4 px_interm = tex_interm.Sample(textureSampler, uv);
 
-    float2 positionL = fd_points_tex.Sample(pointsSampler, float2((468.5)/478.0, 0)).xy; //(fd_leye_1 + fd_leye_2) / 2.0;
+    float2 positionL = fd_points_tex.Sample(pointsSampler, float2((468.5)/478.0, 0)).xy;
     float2 positionR = fd_points_tex.Sample(pointsSampler, float2((473.5)/478.0, 0)).xy;
 
     float intensityOfLaser = (
@@ -422,9 +404,7 @@ float4 EffectLinear__step3(float2 uv) {
         + 0.5 * laserIntensity(uv, positionR, 0.6, distance(positionL, positionR), 1.7)
     );
 
-    float4 px = image.Sample(textureSampler, uv);
-
-    if (intensityOfLaser > 0.00000) {
+    if (intensityOfLaser > 0.000001) {
         float4 laserColor;
         laserColor.r = clamp(intensityOfLaser*1.00, 0.0, 1.0);
         laserColor.g = clamp(intensityOfLaser*0.12, 0.0, 0.85);
