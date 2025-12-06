@@ -121,8 +121,8 @@ begin
   end;
   if (CurStep=ssPostInstall) then
   begin
-    ExtractTemporaryFile('msvc-redist-helper.exe');
-    Exec(ExpandConstant('{tmp}\msvc-redist-helper.exe'), '2019', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    //ExtractTemporaryFile('msvc-redist-helper.exe');
+    //Exec(ExpandConstant('{tmp}\msvc-redist-helper.exe'), '2019', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   end;
 end;
 
