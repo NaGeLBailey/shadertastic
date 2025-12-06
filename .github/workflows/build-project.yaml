@@ -44,7 +44,7 @@ jobs:
               config_data=('codesign:true' 'notarize:false' 'package:true' 'config:RelWithDebInfo')
               if [[ ${GITHUB_REF_NAME} =~ [0-9]+.[0-9]+.[0-9]+(-(rc|beta).+)? ]]; then
                 config_data[1]='notarize:true'
-                config_data[3]='config:Release'
+                config_data[3]='config:RelWithDebInfo'
               fi
               ;;
             workflow_dispatch)
@@ -294,12 +294,12 @@ jobs:
       - name: Code Sign x64 🔒
         if: success() && github.event_name != 'pull_request' && runner.os == 'Windows'
         run: |
-          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/signtool.exe' sign /fd sha256 /f certificate\certificate.pfx /p '${{ secrets.WINDOWS_CERTIFICATE_PASS }}' /tr http://timestamp.sectigo.com /td sha256 .\release\RelWithDebInfo\${{ steps.setup.outputs.pluginName }}\bin\64bit\${{ steps.setup.outputs.pluginName }}.dll
+          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/signtool.exe' sign /fd sha256 /f certificate\certificate.pfx /p '${{ secrets.WINDOWS_CERTIFICATE_PASS }}' /tr http://timestamp.sectigo.com /td sha256 .\release\${{ needs.check-event.outputs.config }}\${{ steps.setup.outputs.pluginName }}\bin\64bit\${{ steps.setup.outputs.pluginName }}.dll
 
       - name: Add ONNX
         run: |
-          mkdir -p "${{ github.workspace }}/release/RelWithDebInfo/${{ steps.setup.outputs.pluginName }}/bin/64bit/shadertastic_lib"
-          cp "${{ github.workspace }}/build_x64/_deps/onnxruntime-src/lib/onnxruntime.dll" "${{ github.workspace }}/release/RelWithDebInfo/${{ steps.setup.outputs.pluginName }}/bin/64bit/shadertastic_lib"
+          mkdir -p "${{ github.workspace }}/release/${{ needs.check-event.outputs.config }}/${{ steps.setup.outputs.pluginName }}/bin/64bit/shadertastic_lib"
+          cp "${{ github.workspace }}/build_x64/_deps/onnxruntime-src/lib/onnxruntime.dll" "${{ github.workspace }}/release/${{ needs.check-event.outputs.config }}/${{ steps.setup.outputs.pluginName }}/bin/64bit/shadertastic_lib"
 
       - name: Package Plugin 📀
         uses: ./.github/actions/package-plugin
