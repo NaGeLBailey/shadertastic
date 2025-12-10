@@ -6,7 +6,7 @@
   },
   "label": "Recursion",
   "revision": 1,
-  "steps": 1,
+  "steps": 3,
   "parameters": [
     {
       "name": "prev_image",

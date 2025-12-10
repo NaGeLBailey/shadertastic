@@ -179,17 +179,17 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
 
     if (effect != nullptr) {
         gs_texture_t *interm_texture = shadertastic_transparent_texture;
-        struct vec4 clear_color{};
-        vec4_zero(&clear_color);
+        constexpr vec4 clear_color{ 0.0, 0.0, 0.0, 0.0 };
 
-        const enum gs_color_space preferred_spaces[] = {
+        const gs_color_space preferred_spaces[] = {
             GS_CS_SRGB,
             GS_CS_SRGB_16F,
             GS_CS_709_EXTENDED,
         };
         obs_source_t *target_source = obs_filter_get_target(s->source);
-        const enum gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
+        const gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
 
+        bool render_ok = true;
         for (int current_step=0; current_step < effect->nb_steps; ++current_step) {
             bool is_final_step = current_step == effect->nb_steps - 1;
             bool is_interm_step = !is_final_step;
@@ -199,16 +199,21 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
             if (is_interm_step) {
                 s->transition_texrender_buffer = (s->transition_texrender_buffer + 1) & 1;
                 gs_texrender_reset(s->transition_texrender[s->transition_texrender_buffer]);
-                texrender_ok = gs_texrender_begin(s->transition_texrender[s->transition_texrender_buffer], cx, cy);
+                texrender_ok = gs_texrender_begin_with_color_space(s->transition_texrender[s->transition_texrender_buffer], cx, cy, source_space);
+
+                if (!texrender_ok) {
+                    render_ok = false;
+                    break;
+                }
 
                 if (texrender_ok) {
                     gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
                     gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
                 }
             }
-            if (texrender_ok && is_saved_step) {
-                texrender_ok = effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space);
-            }
+            // if (texrender_ok && is_saved_step) {
+            //     texrender_ok = effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space);
+            // }
 
             if (texrender_ok) {
                 gs_blend_state_push();
@@ -221,7 +226,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
                 effect->render_shader(cx, cy, !is_final_step && !is_saved_step);
 
                 if (is_saved_step) {
-                    effect->prev_frames_to_keep[current_step]->detach(s->source, cx, cy, is_final_step);
+                    effect->prev_frames_to_keep[current_step]->detach();
                 }
                 if (is_interm_step) {
                     gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);

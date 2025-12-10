@@ -99,7 +99,7 @@ gs_eparam_t *effect_shader::get_param_by_name(const char *param_name) const {
 }
 
 void effect_shader::render(obs_source_t *filter, uint32_t cx, uint32_t cy) {
-    obs_source_process_filter_end(filter, gs_effect, cx, cy);
+    obs_source_process_filter_tech_end(filter, gs_effect, cx, cy, "Draw");
 }
 
 void effect_shader::release() {

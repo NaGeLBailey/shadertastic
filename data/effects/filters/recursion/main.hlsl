@@ -60,7 +60,10 @@ float4 EffectLinear(float2 uv)
             return image.Sample(textureSampler, uv);
         }
         float2 uv2 = (uv - 0.5);
-        uv2 = (uv2*(1.00-zoom)) + 0.5;
+
+        float zoom_ratio = ( pow(100, (clamp(zoom, 0.0, 1.0))) - 1 ) / (100 - 1);  // Log scale magique : (a^x - 1) / (a - 1)
+
+        uv2 = (uv2*(1.00-zoom_ratio)) + 0.5;
 
         float r = length(uv2 * float2(vpixel/upixel, 1.0));
 
@@ -70,7 +73,7 @@ float4 EffectLinear(float2 uv)
 
         prev_px.rgb = prev_px.rgb / prev_px[3] / prev_px[3];
 
-        float4 px_out = float4(0.0, 0.0, 0.0, max(prev_px[3]*prev_alpha, max(px[3], px_small[3])));
+        float4 px_out = float4(0.0, 0.0, 0.0, max(px[3], max(prev_px[3]*prev_alpha, px_small[3])));
 
         px_out.rgb = lerp(
             prev_px.rgb,

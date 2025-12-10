@@ -4,25 +4,58 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 #include <obs-module.h>
+#include <opencv2/core/mat.hpp>
 
-void __debug_save_texture_png(gs_stagesurf_t *stagesurf, uint32_t cx, uint32_t cy, const char* path) {
-    uint8_t *videoData = new uint8_t[cx*cy*4];
-	uint32_t videoLinesize = 0;
-	gs_stagesurface_map(stagesurf, &videoData, &videoLinesize);
-
-    //gs_texture_map(texture, videoData, &videoLinesize);
-    stbi_write_png(path, cx, cy, 4, videoData, 0);
-    delete[] videoData;
+int __debug_get_opencv_format(const gs_color_format obs_format) {
+	switch (obs_format) {
+		case GS_UNKNOWN: return -1;
+		case GS_A8:
+		case GS_R8: return CV_8UC1;
+		case GS_RGBA:
+		case GS_BGRX:
+		case GS_BGRA: return CV_8UC4;
+			break;
+		case GS_R10G10B10A2: return CV_32SC4;
+		case GS_RGBA16: return CV_16UC4;
+		case GS_R16: return CV_16UC1;
+		case GS_RGBA16F: return CV_16FC4;
+		case GS_RGBA32F: return CV_32FC4;
+		case GS_RG16F: return CV_16FC2;
+		case GS_RG32F: return CV_32FC2;
+		case GS_R16F: return CV_16FC1;
+		case GS_R32F: return CV_32FC1;
+		default: return -1;
+	}
 }
 
+void __debug_save_texture_png(gs_stagesurf_t *stagesurf, uint32_t cx, uint32_t cy, const char* path) {
+    uint8_t *videoData;
+	uint32_t videoLinesize = 0;
+
+	auto color_format = gs_stagesurface_get_color_format(stagesurf);
+	int opencv_format = __debug_get_opencv_format(color_format);
+
+    if (gs_stagesurface_map(stagesurf, &videoData, &videoLinesize)) {
+	    //gs_texture_map(texture, videoData, &videoLinesize);
+    	//stbi_write_png(path, (int)cx, (int)cy, 4, videoData, 0);
+    	cv::Mat imageRGBA(cy, cx, opencv_format, videoData);
+
+    	cv::Mat out;
+    	imageRGBA.convertTo(out, CV_8UC4, 1.0/256.0);
+    	stbi_write_png(path, (int)cx, (int)cy, 4, out.data, 0);
+
+    	//cv::imwrite(path, imageRGBA);
+
+    	gs_stagesurface_unmap(stagesurf);
+    }
+}
 void __debug_save_texture_png(gs_texture_t *texture, uint32_t cx, uint32_t cy, const char* path) {
 	//obs_enter_graphics();
-	gs_stagesurf_t *stagesurf = gs_stagesurface_create(cx, cy, GS_RGBA);
+	gs_stagesurf_t *stagesurf = gs_stagesurface_create(cx, cy, gs_texture_get_color_format(texture));
 	gs_stage_texture(stagesurf, texture);
 
 	__debug_save_texture_png(stagesurf, cx, cy, path);
 
-    gs_stagesurface_unmap(stagesurf);
 	gs_stagesurface_destroy(stagesurf);
 	//obs_leave_graphics();
 }

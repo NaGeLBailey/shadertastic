@@ -755,9 +755,10 @@ cv::Mat face_tracking_get_image_for_detection(face_tracking_state *s, obs_source
     gs_texrender_reset(s->facedetection_texrender);
     if (gs_texrender_begin_with_color_space(s->facedetection_texrender, texrender_size.x, texrender_size.y, source_space)) {
         gs_blend_state_push();
-        gs_blend_function_separate(GS_BLEND_SRCALPHA,
-                       GS_BLEND_INVSRCALPHA, GS_BLEND_ONE,
-                       GS_BLEND_INVSRCALPHA);
+        gs_blend_function_separate(
+            GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
+            GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
+        );
 
         struct vec4 clear_color{0,0,0,0};
         gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);

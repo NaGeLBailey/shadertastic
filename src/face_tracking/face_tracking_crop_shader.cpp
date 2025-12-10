@@ -28,7 +28,10 @@ static inline gs_texture_t * prepare_source_texture(gs_texrender_t *source_texre
     gs_texrender_reset(source_texrender);
     if (gs_texrender_begin_with_color_space(source_texrender, cx, cy, space)) {
 		gs_blend_state_push();
-		gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
+		gs_blend_function_separate(
+		    GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
+		    GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
+		);
 
 		vec4 clear_color{};
 

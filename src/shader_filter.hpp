@@ -158,6 +158,45 @@ inline void shadertastic_filter_update(void *data, obs_data_t *settings) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
+void render_texture(gs_texture_t *final_tex, const uint32_t cx, const uint32_t cy) {
+    gs_blend_state_push();
+    //gs_blend_function(GS_BLEND_ONE, is_last_filter ? GS_BLEND_INVSRCALPHA : GS_BLEND_ZERO);
+    // gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+
+    gs_blend_function_separate(
+        GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
+        GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
+    );
+
+    gs_effect_t *default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+    gs_eparam_t *image = gs_effect_get_param_by_name(default_effect, "image");
+    gs_effect_set_float(gs_effect_get_param_by_name(default_effect, "multiplier"), 1.0);
+
+    const bool linear_srgb = gs_get_linear_srgb();
+    const bool previous = gs_framebuffer_srgb_enabled();
+    gs_enable_framebuffer_srgb(linear_srgb);
+    if (linear_srgb) {
+        gs_effect_set_texture_srgb(image, final_tex);
+    }
+    else {
+        gs_effect_set_texture_srgb(image, final_tex);
+        //gs_effect_set_texture(image, final_tex);
+    }
+
+    gs_technique_t *tech = gs_effect_get_technique(default_effect, "Draw");
+    if (gs_technique_begin(tech)) {
+        if (gs_technique_begin_pass(tech, 0)) {
+            gs_draw_sprite(nullptr, 0, cx, cy);
+            gs_technique_end_pass(tech);
+        }
+        gs_technique_end(tech);
+    }
+
+    gs_enable_framebuffer_srgb(previous);
+    gs_blend_state_pop();
+}
+//----------------------------------------------------------------------------------------------------------------------
+
 static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
     shadertastic_filter *s = shadertastic_filter_cast(data);
     bool is_enabled = obs_source_enabled(s->source) && s->selected_effect != nullptr;
@@ -178,6 +217,13 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
         }
         if (!s->was_enabled) {
             s->frame_index = 0;
+            if (s->selected_effect != nullptr) {
+                for (auto *prev_frame_to_keep : s->selected_effect->prev_frames_to_keep) {
+                    if (prev_frame_to_keep != nullptr) {
+                        prev_frame_to_keep->reset();
+                    }
+                }
+            }
         }
         /*else {
             s->frame_index++;
@@ -202,9 +248,9 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     };
     obs_source_t *target_source = obs_filter_get_target(s->source);
 
-    obs_source_t *target = obs_filter_get_target(s->source);
-    s->width = obs_source_get_base_width(target);
-    s->height = obs_source_get_base_height(target);
+    obs_source_t *parent = obs_filter_get_parent(s->source);
+    s->width = obs_source_get_base_width(parent);
+    s->height = obs_source_get_base_height(parent);
     const uint32_t cx = s->width;
     const uint32_t cy = s->height;
 
@@ -212,74 +258,115 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     const gs_color_format format = gs_get_format_from_space(source_space);
 
     shadertastic_effect_t *selected_effect = s->selected_effect;
-    if (selected_effect != nullptr && selected_effect->main_shader != nullptr) {
-        if (selected_effect->use_facetracking && s->face_tracking != nullptr) {
-            #ifdef DEV_MODE
-            unsigned long tic = get_time_us();
-            #endif
-            face_tracking_tick(s->face_tracking.get(), target_source, s->delta_time);
+    if (selected_effect == nullptr || selected_effect->main_shader == nullptr) {
+        //debug("%s : No effect selected", obs_source_get_name(s->source));
+        obs_source_skip_video_filter(s->source);
+        return;
+    }
 
-            debug_trace("Facetracking time %lu", get_time_us()-tic);
+    if (selected_effect->use_facetracking && s->face_tracking != nullptr) {
+        #ifdef DEV_MODE
+        unsigned long tic = get_time_us();
+        #endif
+        face_tracking_tick(s->face_tracking.get(), target_source, s->delta_time);
+
+        debug_trace("Facetracking time %lu", get_time_us()-tic);
+    }
+    gs_texture_t *interm_texture = shadertastic_transparent_texture;
+
+    gs_blend_state_push();
+    gs_blend_function_separate(
+        GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
+        GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
+    );
+    constexpr vec4 clear_color{0,0,0,0};
+
+    bool render_ok = true;
+    for (int current_step=0; current_step < selected_effect->nb_steps; ++current_step) {
+        bool texrender_ok = true;
+        bool is_final_step = current_step == selected_effect->nb_steps - 1;
+
+        s->interm_texrender_buffer = s->interm_texrender_buffer ^ 1;
+        gs_texrender_reset(s->interm_texrender[s->interm_texrender_buffer]);
+        texrender_ok = gs_texrender_begin_with_color_space(s->interm_texrender[s->interm_texrender_buffer], cx, cy, source_space);
+
+        if (!texrender_ok) {
+            render_ok = false;
+            break;
         }
-        gs_texture_t *interm_texture = shadertastic_transparent_texture;
+
+        gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
+        gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
+
+        // if (texrender_ok && current_step < (int)selected_effect->prev_frames_to_keep.size() && selected_effect->prev_frames_to_keep[current_step]) {
+        //     texrender_ok = selected_effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space);
+        // }
+
+        selected_effect->set_step_params(current_step, interm_texture);
+        // You CANNOT put it above the for loop. Textures need to be rebinded every time (not that costful actually)
+        selected_effect->set_params(nullptr, nullptr, s->frame_index, false, filter_time, s->delta_time, cx, cy, s->rand_seed);
+
+        selected_effect->main_shader->render(s->source, cx, cy);
+
+        // if (selected_effect->prev_frames_to_keep[current_step]) {
+        //     selected_effect->prev_frames_to_keep[current_step]->detach(s->source, cx, cy, false);
+        // }
+        gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
+        interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
+
+        if (current_step < (int)selected_effect->prev_frames_to_keep.size() && selected_effect->prev_frames_to_keep[current_step]) {
+            if (selected_effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space)) {
+                render_texture(interm_texture, cx, cy);
+                selected_effect->prev_frames_to_keep[current_step]->detach();
+
+                if (s->frame_index < 20) {
+                    // __debug_save_texture_png(selected_effect->prev_frames_to_keep[current_step]->prev_texture, cx, cy, (
+                    //     std::string("/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/")
+                    //     + s->selected_effect->name + "-prev-" + std::to_string(s->frame_index) + ".png"
+                    // ).c_str());
+                }
+            }
+        }
+    }
+
+    if (s->frame_index < 20) {
+        // __debug_save_texture_png(interm_texture, cx, cy, (
+        //     std::string("/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/")
+        //     + s->selected_effect->name + "-" + std::to_string(s->frame_index) + ".png"
+        // ).c_str());
+    }
+
+    s->frame_index++;
+
+    if (render_ok) {
         if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
-            gs_blend_state_push();
             gs_blend_function_separate(
                 GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
                 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
             );
-            constexpr vec4 clear_color{0,0,0,0};
 
-            for (int current_step=0; current_step < selected_effect->nb_steps; ++current_step) {
-                /*if (selected_effect->legacy_input_facedetection && s->face_tracking != nullptr) {
-                    legacy_face_tracking_render(s->face_tracking.get(), selected_effect->main_shader.get());
-                }*/
-                bool texrender_ok = true;
-                const bool is_interm_step = (current_step < selected_effect->nb_steps - 1);
+            gs_texture_t *final_tex = interm_texture;
+            render_texture(final_tex, cx, cy);
+            // gs_effect_t *default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+            // gs_eparam_t *image = gs_effect_get_param_by_name(default_effect, "image");
+            // //gs_effect_set_float(gs_effect_get_param_by_name(default_effect, "multiplier"), 1.0f);
+            // gs_effect_set_texture(image, final_tex);
+            //
+            // gs_technique_t *tech = gs_effect_get_technique(default_effect, "Draw");
+            // if (gs_technique_begin(tech)) {
+            //     if (gs_technique_begin_pass(tech, 0)) {
+            //         gs_draw_sprite(final_tex, 0, cx, cy);
+            //         gs_technique_end_pass(tech);
+            //     }
+            //     gs_technique_end(tech);
+            // }
 
-                if (is_interm_step) {
-                    s->interm_texrender_buffer = (s->interm_texrender_buffer+1) & 1;
-                    gs_texrender_reset(s->interm_texrender[s->interm_texrender_buffer]);
-                    texrender_ok = gs_texrender_begin(s->interm_texrender[s->interm_texrender_buffer], cx, cy);
-
-                    if (texrender_ok) {
-                        gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
-                        gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
-                    }
-                }
-                if (texrender_ok && current_step < (int)selected_effect->prev_frames_to_keep.size() && selected_effect->prev_frames_to_keep[current_step]) {
-                    texrender_ok = selected_effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space);
-                }
-
-                if (texrender_ok) {
-                    selected_effect->set_step_params(current_step, interm_texture);
-                    // You CANNOT put it above the for loop. Textures need to be rebinded every time (not that costful actually)
-                    selected_effect->set_params(nullptr, nullptr, s->frame_index, false, filter_time, s->delta_time, cx, cy, s->rand_seed);
-
-                    selected_effect->main_shader->render(s->source, cx, cy);
-
-                    if (selected_effect->prev_frames_to_keep[current_step]) {
-                        selected_effect->prev_frames_to_keep[current_step]->detach(s->source, cx, cy, false);
-                    }
-                    if (is_interm_step) {
-                        gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
-                        interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
-                    }
-                }
-                else {
-                    break;
-                }
-            }
-
-            s->frame_index++;
-
-            gs_blend_state_pop();
+            //obs_source_process_filter_end(s->source, default_effect, cx, cy);
+            //obs_source_process_filter_end(s->source, nullptr, cx, cy);
         }
     }
-    else {
-        //debug("%s : No effect selected", obs_source_get_name(s->source));
-        obs_source_skip_video_filter(s->source);
-    }
+
+    gs_blend_state_pop();
 }
 //----------------------------------------------------------------------------------------------------------------------
 
