@@ -199,6 +199,11 @@ void render_texture(gs_texture_t *final_tex, const uint32_t cx, const uint32_t c
 
 static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
     shadertastic_filter *s = shadertastic_filter_cast(data);
+
+    obs_source_t *target = obs_filter_get_parent(s->source);
+    s->width = obs_source_get_base_width(target);
+    s->height = obs_source_get_base_height(target);
+
     bool is_enabled = obs_source_enabled(s->source) && s->selected_effect != nullptr;
 
     if (s->selected_effect && s->selected_effect->use_facetracking) {
@@ -248,9 +253,6 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     };
     obs_source_t *target_source = obs_filter_get_target(s->source);
 
-    obs_source_t *parent = obs_filter_get_parent(s->source);
-    s->width = obs_source_get_base_width(parent);
-    s->height = obs_source_get_base_height(parent);
     const uint32_t cx = s->width;
     const uint32_t cy = s->height;
 
