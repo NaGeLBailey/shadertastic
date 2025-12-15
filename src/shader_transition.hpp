@@ -26,6 +26,7 @@
 #include "settings.h"
 #include "shadertastic.hpp"
 #include "shadertastic_common.hpp"
+#include "util/texture_util.h"
 
 obs_properties_t *shadertastic_transition_properties(void *data);
 //----------------------------------------------------------------------------------------------------------------------
@@ -192,9 +193,9 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
         bool render_ok = true;
         for (int current_step=0; current_step < effect->nb_steps; ++current_step) {
             bool is_final_step = current_step == effect->nb_steps - 1;
-            bool is_interm_step = !is_final_step;
             bool texrender_ok = true;
             bool is_saved_step = effect->prev_frames_to_keep[current_step] != nullptr;
+            bool is_interm_step = !is_final_step || is_saved_step;
 
             if (is_interm_step) {
                 s->transition_texrender_buffer = (s->transition_texrender_buffer + 1) & 1;
@@ -206,37 +207,38 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
                     break;
                 }
 
-                if (texrender_ok) {
-                    gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
-                    gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
-                }
+                gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
+                gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
             }
             // if (texrender_ok && is_saved_step) {
             //     texrender_ok = effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space);
             // }
 
-            if (texrender_ok) {
-                gs_blend_state_push();
-                gs_blend_function_separate(
-                    GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
-                    GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
-                );
-                effect->set_params(a, b, s->frame_index, is_studio_mode, t, s->delta_time, cx, cy, s->rand_seed);
-                effect->set_step_params(current_step, interm_texture);
-                effect->render_shader(cx, cy, !is_final_step && !is_saved_step);
+            gs_blend_state_push();
+            gs_blend_function_separate(
+                GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
+                GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
+            );
+            effect->set_params(a, b, s->frame_index, is_studio_mode, t, s->delta_time, cx, cy, s->rand_seed);
+            effect->set_step_params(current_step, interm_texture);
+            effect->render_shader(cx, cy, is_interm_step);
+            if (is_interm_step) {
+                gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);
+                interm_texture = gs_texrender_get_texture(s->transition_texrender[s->transition_texrender_buffer]);
+            }
 
-                if (is_saved_step) {
+            if (is_saved_step) {
+                if (effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space)) {
+                    render_texture(interm_texture, cx, cy, false);
                     effect->prev_frames_to_keep[current_step]->detach();
                 }
-                if (is_interm_step) {
-                    gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);
-                    interm_texture = gs_texrender_get_texture(s->transition_texrender[s->transition_texrender_buffer]);
-                }
-                gs_blend_state_pop();
             }
-            else {
-                debug("texrender_ok IS FALSE");
-                break;
+            gs_blend_state_pop();
+        }
+
+        if (render_ok) {
+            if (effect->prev_frames_to_keep[effect->nb_steps-1] != nullptr) {
+                render_texture(interm_texture, cx, cy, false);
             }
         }
     }

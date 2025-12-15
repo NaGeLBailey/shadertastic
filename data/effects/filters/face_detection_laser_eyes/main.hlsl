@@ -425,6 +425,10 @@ float4 EffectLinear__step3(float2 uv) {
         px_interm.a * px_interm_yuv.x
     );
 
+    px_dest.r = clamp(px_dest.r, 0.0, 1.0);
+    px_dest.g = clamp(px_dest.g, 0.0, 1.0);
+    px_dest.b = clamp(px_dest.b, 0.0, 1.0);
+
     return float4(px_dest, px.a);
 }
 //----------------------------------------------------------------------------------------------------------------------

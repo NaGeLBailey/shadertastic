@@ -73,7 +73,12 @@ float4 EffectLinear(float2 uv)
 
         prev_px.rgb = prev_px.rgb / prev_px[3] / prev_px[3];
 
-        float4 px_out = float4(0.0, 0.0, 0.0, max(px[3], max(prev_px[3]*prev_alpha, px_small[3])));
+        float alpha = px[3];
+        alpha = max(alpha, (prev_px[3])*prev_alpha);
+        alpha = max(alpha, (px_small[3])*prev_alpha);
+        alpha = clamp(alpha, 0.0, 1.0);
+
+        float4 px_out = float4(0.0, 0.0, 0.0, alpha);
 
         px_out.rgb = lerp(
             prev_px.rgb,

@@ -23,6 +23,8 @@ struct shadertastic_common {
 
     // Filter previous state (enabled/disabled)
     bool was_enabled = false;
+
+    bool must_render = true;
 };
 //----------------------------------------------------------------------------------------------------------------------
 

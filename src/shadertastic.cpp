@@ -155,7 +155,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
     struct obs_source_info shadertastic_filter_info = {};
     shadertastic_filter_info.id = "shadertastic_filter";
     shadertastic_filter_info.type = OBS_SOURCE_TYPE_FILTER;
-    shadertastic_filter_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW /*| OBS_SOURCE_COMPOSITE*/;
+    shadertastic_filter_info.output_flags = OBS_SOURCE_VIDEO /*| OBS_SOURCE_COMPOSITE*/;
     shadertastic_filter_info.get_name = shadertastic_filter_get_name;
     shadertastic_filter_info.create = shadertastic_filter_create;
     shadertastic_filter_info.destroy = shadertastic_filter_destroy;
