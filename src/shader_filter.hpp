@@ -162,7 +162,7 @@ inline void shadertastic_filter_update(void *data, obs_data_t *settings) {
 static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
     shadertastic_filter *s = shadertastic_filter_cast(data);
 
-    obs_source_t *target = obs_filter_get_parent(s->source);
+    obs_source_t *target = obs_filter_get_target(s->source);
     s->width = obs_source_get_base_width(target);
     s->height = obs_source_get_base_height(target);
 
