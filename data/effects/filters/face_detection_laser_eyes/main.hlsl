@@ -20,6 +20,7 @@ uniform float eye_intensity_ratio;
 uniform float intensity;
 uniform float flare_width;
 uniform float audio_impact;
+uniform float hue_shift;
 uniform bool no_effect_if_no_sound;
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -63,6 +64,17 @@ float3 rgb2yuv(float3 rgb) {
         (-0.148 * rgb.r - 0.291 * rgb.g + 0.439 * rgb.b),
         ( 0.439 * rgb.r - 0.368 * rgb.g - 0.071 * rgb.b)
     );
+}
+//----------------------------------------------------------------------------------------------------------------------
+
+float4 apply_hue_shift(float4 pixel, float shift)
+{
+    float3 P = float3(0.55735,0.55735,0.55735)*dot(float3(0.55735,0.55735,0.55735),pixel.xyz);
+    float3 U = pixel.xyz-P;
+    float3 V = cross(float3(0.55735,0.55735,0.55735),U);
+
+    pixel.xyz = U*cos(shift*6.2832) + V*sin(shift*6.2832) + P;
+    return float4(pixel.xyz, pixel.a);
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -361,6 +373,8 @@ float4 EffectLinear__step0(float2 uv) {
         laserColor.r = clamp(intensityOfEyes*1.00, 0.0, 1.0);
         laserColor.g = clamp(intensityOfEyes*0.12, 0.0, 0.85);
         laserColor.b = clamp(intensityOfEyes*0.10, 0.0, 0.8);
+        laserColor = apply_hue_shift(laserColor, hue_shift/360);
+
         px += laserColor;
         px.r = clamp(px.r, 0.0, 1.0);
         px.g = clamp(px.g, 0.0, 1.0);
@@ -410,6 +424,7 @@ float4 EffectLinear__step3(float2 uv) {
         laserColor.g = clamp(intensityOfLaser*0.12, 0.0, 0.85);
         laserColor.b = clamp(intensityOfLaser*0.10, 0.0, 0.8);
         laserColor.a = clamp(intensityOfLaser*0.60, 0.0, 1.0);
+        laserColor = apply_hue_shift(laserColor, hue_shift/360.0);
         //laserColor.a = 1.0;
         px += laserColor;
         px.r = clamp(px.r, 0.0, 1.0);
