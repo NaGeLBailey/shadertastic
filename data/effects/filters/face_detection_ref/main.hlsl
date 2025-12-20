@@ -19,6 +19,7 @@ uniform bool show_mesh_face;
 uniform bool show_mesh_lips;
 uniform bool show_bounding_box;
 uniform bool show_eyes;
+uniform float base_mult;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -60,7 +61,7 @@ float4 EffectLinear(float2 uv)
     }
 
     float4 px = image.Sample(textureSampler, uv);
-    float4 mult = float4(0.9, 0.9, 0.9, 1.0);
+    float4 mult = float4(base_mult, base_mult, base_mult , 1.0);
 
     float aspectRatio = vpixel/upixel;
     float2 orthoCorrection = float2(aspectRatio, 1.0);

@@ -41,6 +41,15 @@
       "label": "Show produced texture",
       "type": "bool",
       "default": true
+    },
+    {
+      "name": "base_mult",
+      "label": "Non-face mult",
+      "type": "float",
+      "min": 0.0,
+      "max": 1.0,
+      "slider": true,
+      "default": 0.9
     }
   ]
 }
