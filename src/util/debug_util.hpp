@@ -49,15 +49,17 @@ void __debug_save_texture_png(gs_stagesurf_t *stagesurf, uint32_t cx, uint32_t c
     	gs_stagesurface_unmap(stagesurf);
     }
 }
-void __debug_save_texture_png(gs_texture_t *texture, uint32_t cx, uint32_t cy, const char* path) {
-	//obs_enter_graphics();
+void __debug_save_texture_png(gs_texture_t *texture, const char* path) {
+	obs_enter_graphics();
+	const uint32_t cx = gs_texture_get_width(texture);
+	const uint32_t cy = gs_texture_get_height(texture);
 	gs_stagesurf_t *stagesurf = gs_stagesurface_create(cx, cy, gs_texture_get_color_format(texture));
 	gs_stage_texture(stagesurf, texture);
 
 	__debug_save_texture_png(stagesurf, cx, cy, path);
 
 	gs_stagesurface_destroy(stagesurf);
-	//obs_leave_graphics();
+	obs_leave_graphics();
 }
 
 static void __debug_log_properties(obs_properties_t *props) {
