@@ -369,8 +369,19 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
     // Shader mode
     p = obs_properties_add_list(props, "effect", "Effect", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
     obs_property_list_add_string(p, "(Choose an effect)", "");
+
+    std::vector<std::pair<std::string, shadertastic_effect_t*>> sorted_effects;
+    sorted_effects.reserve(s->effects->size());
     for (auto& [effect_name, effect] : *(s->effects)) {
-        const char *effect_label = effect.label.c_str();
+        sorted_effects.emplace_back(effect_name, &effect);
+    }
+    std::sort(sorted_effects.begin(), sorted_effects.end(),
+        [](const auto& a, const auto& b) {
+            return a.second->label < b.second->label;
+        }
+    );
+    for (const auto& [effect_name, effect] : sorted_effects) {
+        const char *effect_label = effect->label.c_str();
         obs_property_list_add_string(p, effect_label, effect_name.c_str());
     }
     obs_property_set_modified_callback2(p, shadertastic_filter_properties_change_effect_callback, data);
