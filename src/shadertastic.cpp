@@ -155,7 +155,7 @@ void load_effects(shadertastic_common *s, obs_data_t *settings, const std::strin
     struct obs_source_info shadertastic_filter_info = {};
     shadertastic_filter_info.id = "shadertastic_filter";
     shadertastic_filter_info.type = OBS_SOURCE_TYPE_FILTER;
-    shadertastic_filter_info.output_flags = OBS_SOURCE_VIDEO /*| OBS_SOURCE_COMPOSITE*/;
+    shadertastic_filter_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW /*| OBS_SOURCE_SRGB *//*| OBS_SOURCE_COMPOSITE*/;
     shadertastic_filter_info.get_name = shadertastic_filter_get_name;
     shadertastic_filter_info.create = shadertastic_filter_create;
     shadertastic_filter_info.destroy = shadertastic_filter_destroy;
@@ -196,5 +196,49 @@ bool is_module_loaded() {
     }
 
     FaceTrackingCropShader::release();
+}
+//----------------------------------------------------------------------------------------------------------------------
+
+const char *shadertastic_transition_get_name(void *type_data) {
+    UNUSED_PARAMETER(type_data);
+    return obs_module_text("TransitionName");
+}
+const char *shadertastic_filter_get_name(void *type_data) {
+    UNUSED_PARAMETER(type_data);
+    return obs_module_text("FilterName");
+}
+//----------------------------------------------------------------------------------------------------------------------
+
+void shadertastic_effect_set_defaults(obs_data_t *settings, shadertastic_effect_t *effect) {
+    if (effect == nullptr) {
+        return;
+    }
+
+    if (settings) {
+        for (auto param: effect->effect_params) {
+            std::string full_param_name = param->get_full_param_name(effect->name.c_str());
+            param->set_default(settings, full_param_name.c_str());
+        }
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------
+
+void about_property(obs_properties_t *props) {
+    obs_properties_add_text(
+        props,
+        "plugin_info",
+        "<a href=\"https://shadertastic.com\">Shadertastic</a> (" PROJECT_VERSION ") by <a href=\"http://about.xurei.io/\">xurei</a>",
+        OBS_TEXT_INFO
+    );
+}
+//----------------------------------------------------------------------------------------------------------------------
+
+MODULE_EXPORT [[maybe_unused]] const char *obs_module_name(void) {
+    return obs_module_text("ModuleName");
+}
+//----------------------------------------------------------------------------------------------------------------------
+
+MODULE_EXPORT [[maybe_unused]] const char *obs_module_description(void) {
+    return obs_module_text("ModuleDescription");
 }
 //----------------------------------------------------------------------------------------------------------------------
