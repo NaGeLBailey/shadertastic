@@ -21,6 +21,9 @@
 #include "../util/file_util.h"
 #include "../is_module_loaded.h"
 #include "shader.h"
+#include "../shadertastic.hpp"
+
+#include "src/obs-source-custom.h"
 
 effect_shader::~effect_shader() {
     //debug("DELETE effect_shader %s", path.c_str());
@@ -98,8 +101,8 @@ gs_eparam_t *effect_shader::get_param_by_name(const char *param_name) const {
     return gs_effect_get_param_by_name(gs_effect, param_name);
 }
 
-void effect_shader::render(obs_source_t *filter, uint32_t cx, uint32_t cy) {
-    obs_source_process_filter_tech_end(filter, gs_effect, cx, cy, "Draw");
+void effect_shader::render(obs_source_t *filter, gs_texrender_t *texrender, uint32_t cx, uint32_t cy) {
+    shadertastic_source_process_filter_tech_end(filter, texrender, gs_effect, cx, cy, "Draw");
 }
 
 void effect_shader::release() {

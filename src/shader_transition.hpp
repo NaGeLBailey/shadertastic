@@ -229,7 +229,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
 
             if (is_saved_step) {
                 if (effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space)) {
-                    render_texture(interm_texture, cx, cy, false);
+                    render_texture(interm_texture, false, false);
                     effect->prev_frames_to_keep[current_step]->detach();
                 }
             }
@@ -238,7 +238,7 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
 
         if (render_ok) {
             if (effect->prev_frames_to_keep[effect->nb_steps-1] != nullptr) {
-                render_texture(interm_texture, cx, cy, false);
+                render_texture(interm_texture, false, false);
             }
         }
     }

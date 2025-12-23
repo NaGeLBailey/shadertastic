@@ -110,7 +110,6 @@ void FaceTrackingCropShader::release() {
 FaceTrackingCropShader::FaceTrackingCropShader() {
     obs_enter_graphics();
     {
-        this->source_texrender = gs_texrender_create(GS_RGBA32F, GS_ZS_NONE);
         this->crop_texrender = gs_texrender_create(GS_RGBA32F, GS_ZS_NONE);
         this->staging_texture = gs_stagesurface_create(192, 192, GS_RGBA32F);
     }
@@ -128,37 +127,25 @@ FaceTrackingCropShader::~FaceTrackingCropShader() {
             gs_texrender_destroy(this->crop_texrender);
             this->crop_texrender = nullptr;
         }
-        if (this->source_texrender) {
-            gs_texrender_destroy(this->source_texrender);
-            this->source_texrender = nullptr;
-        }
     }
     obs_leave_graphics();
 }
 
-cv::Mat FaceTrackingCropShader::getCroppedImage(obs_source_t *target_source, float2 &roi_center, float2 &roi_size, float rotation) {
+cv::Mat FaceTrackingCropShader::getCroppedImage(gs_texture_t *source_tex, float2 &roi_center, float2 &roi_size, float rotation) {
     #ifdef DEV_MODE
     unsigned long tic = get_time_us();
     #endif
-    const enum gs_color_space preferred_spaces[] = {
-        GS_CS_SRGB,
-        GS_CS_SRGB_16F,
-        GS_CS_709_EXTENDED,
-    };
-    const enum gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
 
-    uint32_t cx = obs_source_get_width(target_source);
-    uint32_t cy = obs_source_get_height(target_source);
+    const uint32_t cx = gs_texture_get_width(source_tex);
+    const uint32_t cy = gs_texture_get_height(source_tex);
     float aspect_ratio = static_cast<float>(cx) / static_cast<float>(cy);
-
-    gs_texture_t *source_tex = prepare_source_texture(this->source_texrender, target_source, cx, cy, source_space);
 
     if (source_tex == nullptr) {
         return failed;
     }
 
     gs_texrender_reset(this->crop_texrender);
-    if (gs_texrender_begin_with_color_space(this->crop_texrender, 192, 192, source_space)) {
+    if (gs_texrender_begin_with_color_space(this->crop_texrender, 192, 192, GS_CS_SRGB_16F)) {
         gs_blend_state_push();
         gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
 

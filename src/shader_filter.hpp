@@ -25,6 +25,7 @@
 #include <QApplication>
 #include "effect.h"
 #include "face_tracking/face_tracking.h"
+#include "obs-source-custom.h"
 #include "settings.h"
 #include "shadertastic.hpp"
 #include "shadertastic_common.hpp"
@@ -114,6 +115,10 @@ static void shadertastic_filter_destroy(void *data) {
     obs_enter_graphics();
     gs_texrender_destroy(s->interm_texrender[0]);
     gs_texrender_destroy(s->interm_texrender[1]);
+    if (s->filter_texrender) {
+        gs_texrender_destroy(s->filter_texrender);
+        s->filter_texrender = nullptr;
+    }
     obs_leave_graphics();
     face_tracking_destroy(s->face_tracking);
     s->release();
@@ -197,6 +202,10 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
         /*else {
             s->frame_index++;
         }*/
+
+        if (s->filter_texrender) {
+            gs_texrender_reset(s->filter_texrender);
+        }
     }
     if (is_enabled != s->was_enabled) {
         s->was_enabled = is_enabled;
@@ -215,8 +224,6 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
         return;
     }
 
-    const float filter_time = s->time;
-
     constexpr gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
         GS_CS_SRGB_16F,
@@ -227,23 +234,40 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     const gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
     const gs_color_format format = gs_get_format_from_space(source_space);
 
+    if (!shadertastic_source_process_filter_begin_with_color_space(s->source, s, format, source_space)) {
+        obs_source_skip_video_filter(s->source);
+        return;
+    }
+
+    const float filter_time = s->time;
     const uint32_t cx = s->width;
     const uint32_t cy = s->height;
 
     if (!s->must_render) {
         gs_texture_t *final_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
-        if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_ALLOW_DIRECT_RENDERING)) {
-            render_texture(final_texture, cx, cy, false);
-        }
+        render_texture(final_texture, false, false);
+        debug("Recycled render");
         return;
     }
     s->must_render = false;
+
+    // Facetracking
+    if (selected_effect->use_facetracking && s->face_tracking != nullptr) {
+        #ifdef DEV_MODE
+        unsigned long tic = get_time_us();
+        #endif
+        auto *source_tex = gs_texrender_get_texture(s->filter_texrender);
+        face_tracking_tick(s->face_tracking.get(), source_tex, s->delta_time);
+
+        debug_trace("Facetracking time %lu", get_time_us()-tic);
+    }
+
     gs_texture_t *interm_texture = shadertastic_transparent_texture;
 
     gs_blend_state_push();
     gs_blend_function_separate(
-        GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
-        GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
+        GS_BLEND_ONE, GS_BLEND_ZERO,
+        GS_BLEND_ONE, GS_BLEND_ZERO
     );
     constexpr vec4 clear_color{0,0,0,0};
 
@@ -253,7 +277,7 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
 
         s->interm_texrender_buffer = s->interm_texrender_buffer ^ 1;
         gs_texrender_reset(s->interm_texrender[s->interm_texrender_buffer]);
-        texrender_ok = gs_texrender_begin_with_color_space(s->interm_texrender[s->interm_texrender_buffer], cx, cy, source_space);
+        texrender_ok = gs_texrender_begin_with_color_space(s->interm_texrender[s->interm_texrender_buffer], cx, cy, GS_CS_SRGB_16F);
 
         if (!texrender_ok) {
             render_ok = false;
@@ -267,54 +291,29 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
         // You CANNOT put it above the for loop. Textures need to be rebinded every time (not that costful actually)
         selected_effect->set_params(nullptr, nullptr, s->frame_index, false, filter_time, s->delta_time, cx, cy, s->rand_seed);
 
-        selected_effect->main_shader->render(s->source, cx, cy);
+        selected_effect->main_shader->render(s->source, s->filter_texrender, cx, cy);
 
         gs_texrender_end(s->interm_texrender[s->interm_texrender_buffer]);
         interm_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
 
         if (current_step < (int)selected_effect->prev_frames_to_keep.size() && selected_effect->prev_frames_to_keep[current_step]) {
             if (selected_effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space)) {
-                render_texture(interm_texture, cx, cy, false);
+                render_texture(interm_texture, false, true);
                 selected_effect->prev_frames_to_keep[current_step]->detach();
-
-                // if (s->frame_index < 20) {
-                //     __debug_save_texture_png(selected_effect->prev_frames_to_keep[current_step]->prev_texture, cx, cy, (
-                //         std::string("/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/")
-                //         + s->selected_effect->name + "-prev-" + std::to_string(s->frame_index) + ".png"
-                //     ).c_str());
-                // }
             }
         }
     }
 
-    // if (s->frame_index < 20) {
-    //     __debug_save_texture_png(interm_texture, cx, cy, (
-    //         std::string("/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/")
-    //         + s->selected_effect->name + "-" + std::to_string(s->frame_index) + ".png"
-    //     ).c_str());
-    // }
-
     s->frame_index++;
 
     if (render_ok) {
-        if (obs_source_process_filter_begin_with_color_space(s->source, format, source_space, OBS_NO_DIRECT_RENDERING)) {
-            render_texture(interm_texture, cx, cy, false);
-        }
+        render_texture(interm_texture, false, false);
+    }
+    else {
+        debug("huh?");
     }
 
     gs_blend_state_pop();
-
-    // Prepare next frame.
-    // We need to put this here so we are sure that all the render have been done and will be reused
-    // Facetracking
-    if (selected_effect->use_facetracking && s->face_tracking != nullptr) {
-        #ifdef DEV_MODE
-        unsigned long tic = get_time_us();
-        #endif
-        face_tracking_tick(s->face_tracking.get(), target_source, s->delta_time);
-
-        debug_trace("Facetracking time %lu", get_time_us()-tic);
-    }
 }
 //----------------------------------------------------------------------------------------------------------------------
 

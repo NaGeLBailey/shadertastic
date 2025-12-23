@@ -52,7 +52,8 @@ class effect_shader {
     gs_eparam_t * get_param_by_name(const char *param_name) const;
     bool loop(const char *tech_name);
 
-    void render(obs_source_t *filter, uint32_t cx, uint32_t cy);
+    //void render(gs_texrender_t *texrender, uint32_t cx, uint32_t cy);
+    void render(obs_source_t *filter, gs_texrender_t *texrender, uint32_t cx, uint32_t cy);
 
     void release();
 

@@ -26,6 +26,7 @@
 #include "../logging_functions.hpp"
 #include "../settings.h"
 #include "../util/time_util.hpp"
+#include "src/util/texture_util.h"
 
 // Globals
 face_tracking_bounding_box no_bounding_box{
@@ -604,7 +605,7 @@ uint2 scaledown_aspectratio(uint32_t cx, uint32_t cy, uint32_t max_size) {
     }
 }
 
-void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, float deltatime) {
+void face_tracking_tick(face_tracking_state *s, gs_texture_t *source_tex, const float deltatime) {
     #ifdef DEV_MODE
     unsigned long tic = get_time_us();
     #endif
@@ -617,9 +618,9 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
 
     bool face_found = true;
 
-    uint32_t cx = obs_source_get_width(target_source);
-    uint32_t cy = obs_source_get_height(target_source);
     // Scaling down cx and cy to make them fit in 192x192
+    const uint32_t cx = gs_texture_get_width(source_tex);
+    const uint32_t cy = gs_texture_get_height(source_tex);
     uint2 texrender_size_for_detection = scaledown_aspectratio(cx, cy, 192);
 
     bool prev_facelandmark_results_display_results = s->facelandmark_results_display_results;
@@ -627,7 +628,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
     debug_trace("A %lu", get_time_us()-tic);
 
     if (facemesh->IsFaceDetectionNeeded()) {
-        cv::Mat imageBGR = face_tracking_get_image_for_detection(s, target_source, texrender_size_for_detection);
+        cv::Mat imageBGR = face_tracking_get_image_for_detection(s, source_tex, texrender_size_for_detection);
 
         if (imageBGR.empty()) {
             log_error("Something went wrong with the extraction of the source texture");
@@ -649,7 +650,7 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
         debug_trace("C %lu", get_time_us()-tic);
 
         // Scaling down cx and cy to make them fit in 192x192
-        cv::Mat imageBGR = face_tracking_get_image_for_mesh(s, target_source, roi_center, roi_size, rotation);
+        cv::Mat imageBGR = face_tracking_get_image_for_mesh(s, source_tex, roi_center, roi_size, rotation);
         debug_trace("D %lu", get_time_us()-tic);
 
         if (imageBGR.empty()) {
@@ -733,15 +734,13 @@ void face_tracking_tick(face_tracking_state *s, obs_source_t *target_source, flo
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-cv::Mat face_tracking_get_image_for_detection(face_tracking_state *s, obs_source_t *target_source, uint2 &texrender_size) {
+cv::Mat face_tracking_get_image_for_detection(face_tracking_state *s, gs_texture_t *source_tex, const uint2 &texrender_size) {
     const enum gs_color_space preferred_spaces[] = {
         GS_CS_SRGB,
         GS_CS_SRGB_16F,
         GS_CS_709_EXTENDED,
     };
-    const enum gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
-    uint32_t cx = obs_source_get_width(target_source);
-    uint32_t cy = obs_source_get_height(target_source);
+    const gs_color_space source_space = GS_CS_SRGB;
     const bool previous = gs_framebuffer_srgb_enabled();
     gs_enable_framebuffer_srgb(true);
 
@@ -754,18 +753,8 @@ cv::Mat face_tracking_get_image_for_detection(face_tracking_state *s, obs_source
 
     gs_texrender_reset(s->facedetection_texrender);
     if (gs_texrender_begin_with_color_space(s->facedetection_texrender, texrender_size.x, texrender_size.y, source_space)) {
-        gs_blend_state_push();
-        gs_blend_function_separate(
-            GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
-            GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
-        );
+        render_texture(source_tex, true, false);
 
-        struct vec4 clear_color{0,0,0,0};
-        gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
-        gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f);
-
-        obs_source_video_render(target_source);
-        gs_blend_state_pop();
         gs_texrender_end(s->facedetection_texrender);
 
         gs_texture_t *tex = gs_texrender_get_texture(s->facedetection_texrender);
@@ -804,8 +793,8 @@ cv::Mat face_tracking_get_image_for_detection(face_tracking_state *s, obs_source
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-cv::Mat face_tracking_get_image_for_mesh(face_tracking_state *s, obs_source_t *target_source, float2 &roi_center, float2 &roi_size, float rotation) {
-    return s->crop_shader->getCroppedImage(target_source, roi_center, roi_size, rotation);
+cv::Mat face_tracking_get_image_for_mesh(face_tracking_state *s, gs_texture_t *source_tex, float2 &roi_center, float2 &roi_size, float rotation) {
+    return s->crop_shader->getCroppedImage(source_tex, roi_center, roi_size, rotation);
 }
 //----------------------------------------------------------------------------------------------------------------------
 

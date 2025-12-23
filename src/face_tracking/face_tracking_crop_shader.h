@@ -24,7 +24,6 @@
 
 class FaceTrackingCropShader {
 private:
-    gs_texrender_t *source_texrender;
     gs_texrender_t *crop_texrender;
     gs_stagesurf_t *staging_texture = nullptr;
     static gs_effect_t *gs_crop_effect;
@@ -39,7 +38,7 @@ public:
     FaceTrackingCropShader();
     ~FaceTrackingCropShader();
 
-    cv::Mat getCroppedImage(obs_source_t *target_source, float2 &roi_center, float2 &roi_size, float rotation);
+    cv::Mat getCroppedImage(gs_texture_t *source_tex, float2 &roi_center, float2 &roi_size, float rotation);
 };
 
 #endif // SHADERTASTIC_FACE_TRACKING_CROP_SHADER_H
