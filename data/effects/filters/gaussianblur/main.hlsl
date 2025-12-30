@@ -16,8 +16,10 @@ float gaussian(float x) {
 }
 
 float4 getGaussianU(float2 uv, int nb_samples) {
-    float gaussian_sum = gaussian(0);
-    float4 px_out = image.Sample(textureSampler, uv) * gaussian_sum;
+    float4 px_out = image.Sample(textureSampler, uv);
+    float gaussian_sum_alpha = gaussian(0);
+    float gaussian_sum = gaussian_sum_alpha * px_out[3];
+    px_out.rgb *= px_out[3];
     float nb_samples_f = float(nb_samples);
     #ifdef _D3D11
     [unroll(100)]
@@ -28,15 +30,22 @@ float4 getGaussianU(float2 uv, int nb_samples) {
         float4 px_left = image.Sample(textureSampler, float2(uv[0]-du, uv[1]));
 
         float k = gaussian(float(i) / nb_samples_f);
-        px_out += (px_right + px_left)*k;
-        gaussian_sum += 2*k;
+        float alpha_impact = k * (px_right.a + px_left.a);
+        px_out.rgb += k * (px_right.rgb*px_right.a + px_left.rgb*px_left.a);
+        px_out.a += alpha_impact;
+        gaussian_sum += alpha_impact;
+        gaussian_sum_alpha += 2*k;
     }
-    return px_out / gaussian_sum;
+    px_out.rgb /= gaussian_sum;
+    px_out[3] /= gaussian_sum_alpha;
+    return px_out;
 }
 
 float4 getGaussianV(float2 uv, int nb_samples) {
-    float gaussian_sum = gaussian(0);
-    float4 px_out = tex_interm.Sample(textureSampler, uv) * gaussian_sum;
+    float4 px_out = tex_interm.Sample(textureSampler, uv);
+    float gaussian_sum_alpha = gaussian(0);
+    float gaussian_sum = gaussian_sum_alpha * px_out[3];
+    px_out.rgb *= px_out[3];
     float nb_samples_f = float(nb_samples);
     #ifdef _D3D11
     [unroll(100)]
@@ -47,17 +56,19 @@ float4 getGaussianV(float2 uv, int nb_samples) {
         float4 px_left = tex_interm.Sample(textureSampler, float2(uv[0], uv[1]-dv));
 
         float k = gaussian(float(i) / nb_samples_f);
-        px_out += (px_right + px_left)*k;
-        gaussian_sum += 2*k;
+        float alpha_impact = k * (px_right.a + px_left.a);
+        px_out.rgb += k * (px_right.rgb*px_right.a + px_left.rgb*px_left.a);
+        px_out.a += alpha_impact;
+        gaussian_sum += alpha_impact;
+        gaussian_sum_alpha += 2*k;
     }
-    return px_out / gaussian_sum;
+    px_out.rgb /= gaussian_sum;
+    px_out[3] /= gaussian_sum_alpha;
+    return px_out;
 }
 
 float4 EffectLinear(float2 uv)
 {
-    float u = uv[0];
-    float v = uv[1];
-
     if (current_step == 0) {
         int nb_samples = max(1, blur_level_x);
         return getGaussianU(uv, nb_samples);
