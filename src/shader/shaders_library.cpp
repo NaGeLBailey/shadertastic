@@ -30,8 +30,8 @@ std::shared_ptr<effect_shader> shaders_library_t::load_shader_file(const std::st
         // Effect loading failed. Using the fallback effect to show ERR on the source
         delete new_shader;
         auto emplaced = shaders.emplace(path, fallback_shader);
-        int p = error_str.find("Error creating shader");
-        if (p > 0) {
+        size_t p = error_str.find("Error creating shader");
+        if (p != std::string::npos) {
             error_str = error_str.replace(p + strlen("Error creating shader:"), 1, "\n");
         }
         errors.emplace(path, error_str);
