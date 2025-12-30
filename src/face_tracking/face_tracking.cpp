@@ -673,7 +673,6 @@ void face_tracking_tick(face_tracking_state *s, gs_texture_t *source_tex, const 
     else {
         debug_trace("F %lu", get_time_us()-tic);
         if (shadertastic_settings().one_euro_enabled) {
-            float fps = (float)std::max(0.1, obs_get_active_fps());
             for (size_t i = 0; i < refined_landmarks_num_points; ++i) {
                 s->filters[i * 3 + 0].setMinCutoff(std::max(0.00001f, shadertastic_settings().one_euro_min_cutoff));
                 s->filters[i * 3 + 0].setBeta(std::max(0.0001f, shadertastic_settings().one_euro_beta));
@@ -735,11 +734,6 @@ void face_tracking_tick(face_tracking_state *s, gs_texture_t *source_tex, const 
 //----------------------------------------------------------------------------------------------------------------------
 
 cv::Mat face_tracking_get_image_for_detection(face_tracking_state *s, gs_texture_t *source_tex, const uint2 &texrender_size) {
-    const enum gs_color_space preferred_spaces[] = {
-        GS_CS_SRGB,
-        GS_CS_SRGB_16F,
-        GS_CS_709_EXTENDED,
-    };
     const gs_color_space source_space = GS_CS_SRGB;
     const bool previous = gs_framebuffer_srgb_enabled();
     gs_enable_framebuffer_srgb(true);
@@ -753,6 +747,9 @@ cv::Mat face_tracking_get_image_for_detection(face_tracking_state *s, gs_texture
 
     gs_texrender_reset(s->facedetection_texrender);
     if (gs_texrender_begin_with_color_space(s->facedetection_texrender, texrender_size.x, texrender_size.y, source_space)) {
+        const uint32_t cx = gs_texture_get_width(source_tex);
+        const uint32_t cy = gs_texture_get_height(source_tex);
+        gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f);
         render_texture(source_tex, true, false);
 
         gs_texrender_end(s->facedetection_texrender);

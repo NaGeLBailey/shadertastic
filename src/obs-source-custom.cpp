@@ -113,12 +113,12 @@ bool shadertastic_source_process_filter_begin_with_color_space(obs_source_t *fil
 		gs_texrender_end(s->filter_texrender_pre);
 	}
 
-
 	if (!s->filter_texrender) {
 		s->filter_texrender = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
 	}
 
 	if (gs_texrender_begin_with_color_space(s->filter_texrender, cx, cy, space)) {
+		gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f);
         render_texture(gs_texrender_get_texture(s->filter_texrender_pre), true, true);
 		gs_texrender_end(s->filter_texrender);
 		gs_texrender_reset(s->filter_texrender_pre);
