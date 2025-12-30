@@ -55,52 +55,49 @@ float4 EffectLinear(float2 uv)
     else {
         return tex_interm.Sample(textureSampler, uv);
     }*/
-    if (current_step == 0) {
-        if (frame_index < 1) {
-            return image.Sample(textureSampler, uv);
+    if (frame_index < 1) {
+        return image.Sample(textureSampler, uv);
+    }
+    float2 uv2 = (uv - 0.5);
+
+    float zoom_ratio = ( pow(100, (clamp(zoom, 0.0, 1.0))) - 1 ) / (100 - 1);  // Log scale magique : (a^x - 1) / (a - 1)
+
+    uv2 = (uv2*(1.00-zoom_ratio)) + 0.5;
+
+    float r = length(uv2 * float2(vpixel/upixel, 1.0));
+
+    float4 px = image.Sample(textureSampler, uv);
+    float4 prev_px = float4(0.0,0.0,0.0, 0.0); //prev_image.Sample(textureSampler, uv2);
+
+    for (float du=-upixel; du <= upixel; du += upixel) {
+        for (float dv=-vpixel; dv <= vpixel; dv += vpixel) {
+            prev_px += prev_image.Sample(textureSampler, uv2 + float2(du,dv));
         }
-        float2 uv2 = (uv - 0.5);
-
-        float zoom_ratio = ( pow(100, (clamp(zoom, 0.0, 1.0))) - 1 ) / (100 - 1);  // Log scale magique : (a^x - 1) / (a - 1)
-
-        uv2 = (uv2*(1.00-zoom_ratio)) + 0.5;
-
-        float r = length(uv2 * float2(vpixel/upixel, 1.0));
-
-        float4 px = image.Sample(textureSampler, uv);
-        float4 px_small = image.Sample(textureSampler, uv2);
-        float4 prev_px = prev_image.Sample(textureSampler, uv2);
-
-        prev_px.rgb = prev_px.rgb / prev_px[3] / prev_px[3];
-
-        float alpha = px[3];
-        alpha = max(alpha, (prev_px[3])*prev_alpha);
-        alpha = max(alpha, (px_small[3])*prev_alpha);
-        alpha = clamp(alpha, 0.0, 1.0);
-
-        float4 px_out = float4(0.0, 0.0, 0.0, alpha);
-
-        px_out.rgb = lerp(
-            prev_px.rgb,
-            px.rgb,
-            px[3]
-        );
-        //px_out.a = 0.5;
-//        px_out.a = lerp(
-//            prev_px.a,
-//            px.a,
-//            px_small[3]
-//        );
-
-        return px_out;
     }
-    else {
-        //return float4(0.0, 0.0, 0.0, 0.0);
-        float4 px_out = tex_interm.Sample(textureSampler, uv);
-        //float4 px_out = image.Sample(textureSampler, uv);
-        //px_out.a = 0.9;
-        return px_out;
-    }
+    prev_px *= 1.0/9.0;
+
+    float4 px_small = image.Sample(textureSampler, uv2);
+
+    float alpha = px[3];
+    alpha = max(alpha, (prev_px[3])*prev_alpha);
+    alpha = max(alpha, (px_small[3])*prev_alpha);
+    alpha = clamp(alpha, 0.0, 1.0);
+
+    float4 px_out = float4(0.0, 0.0, 0.0, alpha);
+
+    px_out.rgb = lerp(
+        prev_px.rgb,
+        px.rgb,
+        px[3]
+    );
+    //px_out.a = 0.5;
+    //px_out.a = lerp(
+    //    prev_px.a,
+    //    px.a,
+    //    px_small[3]
+    //);
+
+    return px_out;
 }
 //----------------------------------------------------------------------------------------------------------------------
 
