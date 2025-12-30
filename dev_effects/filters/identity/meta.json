@@ -1,0 +1,18 @@
+{
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io"
+  },
+  "metafileVersion": 1,
+  "label": "AAA Identity",
+  "revision": 1,
+  "steps": 5,
+  "parameters": [
+    {
+      "name": "displace_mode_text",
+      "label": "",
+      "type": "text",
+      "value": "Does nothing"
+    }
+  ]
+}
