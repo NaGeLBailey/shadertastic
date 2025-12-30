@@ -1,4 +1,3 @@
-#include <stdexcept>
 #include <opencv2/imgcodecs.hpp>
 
 #include "texture_util.h"
@@ -12,14 +11,12 @@ void render_texture(gs_texture_t *final_tex, const bool use_copy, const bool com
     // gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
 
     if (use_copy) {
-        gs_enable_blending(false);
         gs_blend_function_separate(
             GS_BLEND_ONE, GS_BLEND_ZERO,
             GS_BLEND_ONE, GS_BLEND_ZERO
         );
     }
     else {
-        gs_enable_blending(true);
 		gs_blend_function_separate(
 			GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
 			GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
@@ -75,6 +72,7 @@ inline int get_opencv_format(const gs_color_format obs_format) {
     }
 }
 
+#ifdef DEV_MODE
 cv::Mat extractImage(gs_texture_t *tex) {
     obs_enter_graphics();
     const uint32_t cx = gs_texture_get_width(tex);
@@ -175,3 +173,4 @@ bool saveMat(
 
     return result != 0;
 }
+#endif // DEV_MODE

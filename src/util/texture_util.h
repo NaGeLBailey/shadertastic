@@ -6,7 +6,9 @@
 
 void render_texture(gs_texture_t *final_tex, bool use_copy, bool compensate_alpha);
 
+#ifdef DEV_MODE
 cv::Mat extractImage(gs_texture_t *tex);
 bool saveMat(cv::Mat &src, std::string path);
+#endif
 
 #endif // TEXTURE_UTIL_H
