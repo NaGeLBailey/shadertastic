@@ -37,6 +37,7 @@
 #include <stdexcept>
 #include "one_euro_filter.h"
 #include "../logging_functions.hpp"
+#include "../to_string.hpp"
 
 // Math constants are not always defined.
 #ifndef M_PI2
@@ -47,7 +48,7 @@
 void LowPassFilter::setAlpha(float alpha_) {
     if (alpha_ <= 0.0 || alpha_ > 1.0) {
         #ifdef __EXCEPTIONS
-            throw std::range_error("alpha should be in (0.0., 1.0] and its current value is " + std::to_string(alpha_));
+            throw std::range_error("alpha should be in (0.0., 1.0] and its current value is " + to_string(alpha_));
         #else
             alpha_ = 0.5;
         #endif

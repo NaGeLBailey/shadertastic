@@ -72,7 +72,6 @@ jobs:
           fi
 
   macos-build:
-    if: false # Disabled until we can get macOS builds working
     name: Build for macOS 🍏
     runs-on: macos-15
     needs: check-event

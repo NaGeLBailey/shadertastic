@@ -33,7 +33,7 @@
     },
     "platformConfig": {
         "macos": {
-            "bundleId": "com.royshilkrot.obs-backgroundremoval"
+            "bundleId": "com.xureilab.shadertastic"
         }
     },
     "name": "shadertastic",
@@ -43,8 +43,8 @@
     "website": "https://github.com/xurei/shadertastic",
     "email": "xureilab@gmail.com",
     "uuids": {
-        "macosPackage": "90e83546-fa37-453a-9adb-b51149c78df1",
-        "macosInstaller": "14c0a640-0656-4528-8243-4a2ab2595dd5",
+        "macosPackage": "42004f8b-aba9-48b3-9449-479ed0c17559",
+        "macosInstaller": "42004f8b-3b59-428f-b424-97593f452b10",
         "windowsApp": "70c85575-38c5-4a7d-811e-342d54343c46"
     }
 }

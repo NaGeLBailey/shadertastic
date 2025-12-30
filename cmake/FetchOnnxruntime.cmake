@@ -12,7 +12,7 @@ set(Onnxruntime_BASEURL "https://github.com/microsoft/onnxruntime/releases/downl
 
 if(APPLE)
   set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-osx-universal2-${Onnxruntime_VERSION}.tgz")
-  set(Onnxruntime_HASH SHA256=9FA57FA6F202A373599377EF75064AE568FDA8DA838632B26A86024C7378D306)
+  set(Onnxruntime_HASH SHA256=49ae8e3a66ccb18d98ad3fe7f5906b6d7887df8a5edd40f49eb2b14e20885809)
 elseif(MSVC)
   set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-win-x64-${Onnxruntime_VERSION}.zip")
   set(OOnnxruntime_HASH SHA256=0b38df9af21834e41e73d602d90db5cb06dbd1ca618948b8f1d66d607ac9f3cd)

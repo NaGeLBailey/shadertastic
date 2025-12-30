@@ -22,14 +22,14 @@
 #include "parameter.hpp"
 
 enum effect_parameter_time_reset_t {
-    NO = 0,
-    YES = 1,
-    PROMPT = 2,
+    CHOICE_NO = 0,
+    CHOICE_YES = 1,
+    CHOICE_PROMPT = 2,
 };
 
 class effect_parameter_time : public effect_parameter {
     private:
-    effect_parameter_time_reset_t reset_on_show_type{NO};
+    effect_parameter_time_reset_t reset_on_show_type{CHOICE_NO};
     bool reset_on_show{false};
     bool show_speed_ui{true};
     float *time;
@@ -56,11 +56,11 @@ class effect_parameter_time : public effect_parameter {
             obs_data_set_default_bool(metadata, "reset_on_show", false);
             const char *reset_on_show_str = obs_data_get_string(metadata, "reset_on_show");
             if (reset_on_show_str && strcmp(reset_on_show_str, "prompt") == 0) {
-                reset_on_show_type = PROMPT;
+                reset_on_show_type = CHOICE_PROMPT;
             }
             else {
                 reset_on_show = obs_data_get_bool(metadata, "reset_on_show");
-                reset_on_show_type = reset_on_show ? YES : NO;
+                reset_on_show_type = reset_on_show ? CHOICE_YES : CHOICE_NO;
             }
 
             // speed field
@@ -95,7 +95,7 @@ class effect_parameter_time : public effect_parameter {
                 obs_properties_add_float_slider(props, get_full_subparam_name_static(full_param_name, "speed").c_str(), speed_label.c_str(),
                     min_speed, max_speed, 0.001);
             }
-            if (reset_on_show_type == PROMPT) {
+            if (reset_on_show_type == CHOICE_PROMPT) {
                 obs_property_t *list_ui = obs_properties_add_list(
                     props, get_full_subparam_name_static(full_param_name, "reset_on_show").c_str(), "On filter visibility toggle:",
                     OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_BOOL
@@ -117,7 +117,7 @@ class effect_parameter_time : public effect_parameter {
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
-            if (reset_on_show_type == PROMPT) {
+            if (reset_on_show_type == CHOICE_PROMPT) {
                 reset_on_show = obs_data_get_bool(settings, get_full_subparam_name_static(full_param_name, "reset_on_show").c_str());
             }
             speed = (float)obs_data_get_double(settings, get_full_subparam_name_static(full_param_name, "speed").c_str());
