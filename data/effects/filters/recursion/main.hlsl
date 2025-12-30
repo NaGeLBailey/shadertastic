@@ -1,6 +1,7 @@
 // Common parameters for all shaders, as reference. Do not uncomment this (but you can remove it safely).
 /*
 uniform float time;            // Time since the shader is running. Goes from 0 to 1 for transition effects; goes from 0 to infinity for filter effects
+uniform int frame_index;       // Auto incremented value of the current frame. Does not increment during steps
 uniform texture2d image;       // Texture of the source (filters only)
 uniform texture2d tex_interm;  // Intermediate texture where the previous step will be rendered (for multistep effects)
 uniform float upixel;          // Width of a pixel in the UV space
@@ -14,6 +15,9 @@ uniform int nb_steps;          // number of steps (for multistep effects)
 uniform texture2d prev_image;
 uniform float prev_alpha;
 uniform float zoom;
+uniform float center_x;
+uniform float center_y;
+uniform bool show_debug_point;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -49,20 +53,52 @@ bool inside_box(float2 v, float2 left_top, float2 right_bottom) {
 
 float4 EffectLinear(float2 uv)
 {
-    /*if (current_step == 0) {
-        return image.Sample(textureSampler, uv);
+    float2 uv2 = uv - float2(center_x, 1.0-center_y);
+    float zoom_ratio = 1.0 - ( pow(100, (clamp(zoom, 0.0, 1.0))) - 1 ) / (100 - 1);  // Log scale magique : (a^x - 1) / (a - 1)
+
+    if (current_step == 1) {
+        float4 px_out = tex_interm.Sample(textureSampler, uv);
+        if (show_debug_point) {
+            if (center_x - upixel < uv.x && uv.x < center_x + upixel) {
+                px_out.rgb = 1.0 - px_out.rgb;
+                px_out.a = 1.0;
+            }
+            else if ((1.0-center_y) - vpixel < uv.y && uv.y < (1.0-center_y) + vpixel) {
+                px_out.rgb = 1.0 - px_out.rgb;
+                px_out.a = 1.0;
+            }
+
+            uv2 /= zoom_ratio;
+            uv2 += float2(center_x, 1.0-center_y);
+            if (0.0 - vpixel/zoom_ratio < uv2.y && uv2.y < 0.0 + vpixel/zoom_ratio) {
+                if (0.0 <= uv2.x && uv2.x <= 1.0) {
+                    return float4(1.0, 1.0, 0.0, 1.0);
+                }
+            }
+            else if (1.0 - vpixel/zoom_ratio < uv2.y && uv2.y < 1.0 + vpixel/zoom_ratio) {
+                if (0.0 <= uv2.x && uv2.x <= 1.0) {
+                    return float4(1.0, 1.0, 0.0, 1.0);
+                }
+            }
+            if (0.0 - upixel/zoom_ratio < uv2.x && uv2.x < 0.0 + upixel/zoom_ratio) {
+                if (0.0 <= uv2.y && uv2.y <= 1.0) {
+                    return float4(1.0, 1.0, 0.0, 1.0);
+                }
+            }
+            else if (1.0 - upixel/zoom_ratio < uv2.x && uv2.x < 1.0 + upixel/zoom_ratio) {
+                if (0.0 <= uv2.y && uv2.y <= 1.0) {
+                    return float4(1.0, 1.0, 0.0, 1.0);
+                }
+            }
+        }
+        return px_out;
     }
-    else {
-        return tex_interm.Sample(textureSampler, uv);
-    }*/
+
     if (frame_index < 1) {
         return image.Sample(textureSampler, uv);
     }
-    float2 uv2 = (uv - 0.5);
 
-    float zoom_ratio = ( pow(100, (clamp(zoom, 0.0, 1.0))) - 1 ) / (100 - 1);  // Log scale magique : (a^x - 1) / (a - 1)
-
-    uv2 = (uv2*(1.00-zoom_ratio)) + 0.5;
+    uv2 = (uv2*zoom_ratio) + float2(center_x, 1.0-center_y);
 
     float r = length(uv2 * float2(vpixel/upixel, 1.0));
 
@@ -90,12 +126,6 @@ float4 EffectLinear(float2 uv)
         px.rgb,
         px[3]
     );
-    //px_out.a = 0.5;
-    //px_out.a = lerp(
-    //    prev_px.a,
-    //    px.a,
-    //    px_small[3]
-    //);
 
     return px_out;
 }
@@ -106,9 +136,6 @@ float4 EffectLinear(float2 uv)
 float4 PSEffect(FragData f_in) : TARGET
 {
     float4 rgba = EffectLinear(f_in.uv);
-    /*if (current_step == nb_steps - 1) {
-        rgba.rgb = srgb_nonlinear_to_linear(rgba.rgb);
-    }*/
     return rgba;
 }
 

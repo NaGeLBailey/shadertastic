@@ -6,7 +6,7 @@
   },
   "label": "Recursion",
   "revision": 1,
-  "steps": 1,
+  "steps": 2,
   "parameters": [
     {
       "name": "prev_image",
@@ -32,6 +32,32 @@
       "step": 0.001,
       "slider": true,
       "default": 0.005
+    },
+    {
+      "name": "center_x",
+      "label": "Center X",
+      "type": "float",
+      "min": 0.0,
+      "max": 1.0,
+      "step": 0.001,
+      "slider": true,
+      "default": 0.5
+    },
+    {
+      "name": "center_y",
+      "label": "Center Y",
+      "type": "float",
+      "min": 0.0,
+      "max": 1.0,
+      "step": 0.001,
+      "slider": true,
+      "default": 0.5
+    },
+    {
+      "name": "show_debug_point",
+      "label": "Show debug elements",
+      "type": "bool",
+      "default": false
     }
   ]
 }
