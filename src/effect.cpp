@@ -30,7 +30,6 @@ void shadertastic_effect_t::load() {
     debug(">>>>>>>>>>>>>>> load_effect %s %s %s", this->name.c_str(), this->path.c_str(), metadata_path.c_str());
 
     this->main_shader = shaders_library.get(this->path);
-    this->error_str = shaders_library.get_error(this->path);
 
     char *meta_json = load_file_zipped_or_local(metadata_path);
 

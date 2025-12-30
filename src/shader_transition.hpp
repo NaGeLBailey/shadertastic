@@ -29,6 +29,7 @@
 #include "util/texture_util.h"
 
 obs_properties_t *shadertastic_transition_properties(void *data);
+void shadertastic_transition_update(void *data, obs_data_t *settings);
 //----------------------------------------------------------------------------------------------------------------------
 
 static shadertastic_transition shadertastic_no_transition;
@@ -66,7 +67,8 @@ static void *shadertastic_transition_create(obs_data_t *settings, obs_source_t *
         load_effects(s, settings, effect_path, "transition");
     }
 
-    obs_source_update(source, settings);
+    //obs_source_update(source, settings);
+    shadertastic_transition_update(s, settings);
     return s;
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -193,14 +195,13 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
         bool render_ok = true;
         for (int current_step=0; current_step < effect->nb_steps; ++current_step) {
             bool is_final_step = current_step == effect->nb_steps - 1;
-            bool texrender_ok = true;
             bool is_saved_step = effect->prev_frames_to_keep[current_step] != nullptr;
             bool is_interm_step = !is_final_step || is_saved_step;
 
             if (is_interm_step) {
                 s->transition_texrender_buffer = (s->transition_texrender_buffer + 1) & 1;
                 gs_texrender_reset(s->transition_texrender[s->transition_texrender_buffer]);
-                texrender_ok = gs_texrender_begin_with_color_space(s->transition_texrender[s->transition_texrender_buffer], cx, cy, source_space);
+                bool texrender_ok = gs_texrender_begin_with_color_space(s->transition_texrender[s->transition_texrender_buffer], cx, cy, source_space);
 
                 if (!texrender_ok) {
                     render_ok = false;
@@ -257,7 +258,7 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
         obs_source_t *scene_a = obs_transition_get_source(s->source, OBS_TRANSITION_SOURCE_A);
         obs_source_t *scene_b = obs_transition_get_source(s->source, OBS_TRANSITION_SOURCE_B);
 
-        if (s->auto_reload && s->selected_effect != nullptr) {
+        if (s->auto_reload && s->selected_effect != nullptr && shadertastic_settings().dev_mode_enabled) {
             debug("AUTO RELOAD");
             s->selected_effect->reload();
             obs_source_update(s->source, nullptr);
@@ -296,42 +297,32 @@ static bool shadertastic_transition_audio_render(void *data, uint64_t *ts_out, s
     if (!s) {
         return false;
     }
+    return obs_transition_audio_render(s->source, ts_out, audio, mixers, channels, sample_rate, s->mix_a, s->mix_b);
+}
+//----------------------------------------------------------------------------------------------------------------------
 
-    uint64_t ts = 0;
+bool shadertastic_transition_properties_change_effect_callback(void *priv, obs_properties_t *props, obs_property_t *p, obs_data_t *data) {
+    UNUSED_PARAMETER(p);
+    shadertastic_transition *s = shadertastic_transition_cast(priv);
 
-    const bool success = obs_transition_audio_render(s->source, ts_out, audio, mixers, channels, sample_rate, s->mix_a, s->mix_b);
-    if (!ts) {
-        return success;
+    if (s->selected_effect != nullptr) {
+        obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), false);
+        obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__warning").c_str()), false);
     }
 
-    if (!*ts_out || ts < *ts_out) {
-        *ts_out = ts;
+    const std::string select_effect_name = obs_data_get_string(data, "effect");
+    debug("CALLBACK : %s", select_effect_name.c_str());
+    auto selected_effect_it = s->effects->find(std::string(select_effect_name));
+    if (selected_effect_it != s->effects->end()) {
+        auto selected_effect = &selected_effect_it->second;
+        obs_property_set_visible(obs_properties_get(props, (selected_effect->name + "__params").c_str()), true);
+        obs_property_set_visible(obs_properties_get(props, (selected_effect->name + "__warning").c_str()), selected_effect->has_error());
+        obs_source_update(s->source, nullptr);
     }
 
     return true;
 }
 //----------------------------------------------------------------------------------------------------------------------
-
-bool shadertastic_transition_properties_change_effect_callback(void *priv, obs_properties_t *props, obs_property_t *p, obs_data_t *data) {
-    UNUSED_PARAMETER(priv);
-    UNUSED_PARAMETER(p);
-    UNUSED_PARAMETER(data);
-    struct shadertastic_transition *s = shadertastic_transition_cast(priv);
-
-    if (s->selected_effect != nullptr) {
-        obs_property_set_visible(obs_properties_get(props, (s->selected_effect->name + "__params").c_str()), false);
-    }
-
-    const char *select_effect_name = obs_data_get_string(data, "effect");
-    debug("CALLBACK : %s", select_effect_name);
-    auto selected_effect = s->effects->find(std::string(select_effect_name));
-    if (selected_effect != s->effects->end()) {
-        debug("CALLBACK : %s -> %s", select_effect_name, selected_effect->second.name.c_str());
-        obs_property_set_visible(obs_properties_get(props, (selected_effect->second.name + "__params").c_str()), true);
-    }
-
-    return true;
-}
 
 bool shadertastic_transition_export_button_click(obs_properties_t *props, obs_property_t *property, void *data) {
     UNUSED_PARAMETER(props);
@@ -369,9 +360,24 @@ bool shadertastic_transition_import_button_click(obs_properties_t *props, obs_pr
     obs_data_release(new_data);
     return true;
 }
+//----------------------------------------------------------------------------------------------------------------------
+
+bool shadertastic_transition_reload_button_click(obs_properties_t *props, obs_property_t *property, void *data) {
+    UNUSED_PARAMETER(property);
+    shadertastic_transition *s = shadertastic_transition_cast(data);
+    if (s->selected_effect != nullptr) {
+        s->selected_effect->reload();
+        obs_property_set_description(obs_properties_get(props,
+            (s->selected_effect->name + "__compile_error").c_str()),
+            s->selected_effect->error_str().c_str()
+        );
+    }
+    return true;
+}
+//----------------------------------------------------------------------------------------------------------------------
 
 obs_properties_t *shadertastic_transition_properties(void *data) {
-    struct shadertastic_transition *s = shadertastic_transition_cast(data);
+    shadertastic_transition *s = shadertastic_transition_cast(data);
     obs_properties_t *props = obs_properties_create();
 
     obs_property_t *p;
@@ -413,6 +419,25 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
     for (auto& [effect_name, effect] : *(s->effects)) {
         const char *effect_label = effect.label.c_str();
         obs_properties_t *effect_group = obs_properties_create();
+
+        obs_properties_t *error_group = obs_properties_create();
+        obs_properties_add_group(effect_group, (effect_name + "__warning").c_str(), "⚠ Shader error", OBS_GROUP_NORMAL, error_group);
+        auto prop = obs_properties_add_text(
+            error_group,
+            (effect_name + "__compile_error").c_str(),
+            effect.error_str().c_str(),
+            OBS_TEXT_INFO
+        );
+        obs_property_text_set_info_type(prop, OBS_TEXT_INFO_WARNING);
+
+        // Reload settings (for development)
+        if (shadertastic_settings().dev_mode_enabled) {
+            obs_properties_add_button(error_group, "reload_btn", "Refresh error message", shadertastic_transition_reload_button_click);
+        }
+
+        // Hidin error group by default. It will be shown in the update() function if required
+        obs_property_set_visible(obs_properties_get(props, (effect_name + "__warning").c_str()), false);
+
         for (auto param: effect.effect_params) {
             std::string full_param_name = param->get_full_param_name(effect_name);
             param->render_property_ui(full_param_name.c_str(), effect_group);

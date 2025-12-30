@@ -36,7 +36,8 @@ class shaders_library_t {
         void load();
 
         std::shared_ptr<effect_shader> get(const std::string &path);
-        std::string get_error(const std::string &path) const;
+        [[nodiscard]] std::string get_error(const std::string &path) const;
+        [[nodiscard]] bool has_error(const std::string &path) const;
 
         std::string get_shader_path(const std::string &path);
 

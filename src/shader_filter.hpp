@@ -153,12 +153,10 @@ inline void shadertastic_filter_update(void *data, obs_data_t *settings) {
     }
 
     if (s->selected_effect != nullptr) {
-        obs_data_set_string(settings, (std::string(selected_effect_name) + "__compile_error").c_str(), s->selected_effect->error_str.c_str());
-        //debug("Selected Effect: %s", selected_effect_name);
+        //obs_data_set_string(settings, (std::string(selected_effect_name) + "__compile_error").c_str(), s->selected_effect->error_str.c_str());
         for (auto param: s->selected_effect->effect_params) {
             std::string full_param_name = param->get_full_param_name(selected_effect_name);
             param->set_data_from_settings(settings, full_param_name.c_str());
-            //info("Assigned value:  %s %lu", full_param_name, param.data_size);
         }
     }
 }
@@ -246,7 +244,6 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     if (!s->must_render) {
         gs_texture_t *final_texture = gs_texrender_get_texture(s->interm_texrender[s->interm_texrender_buffer]);
         render_texture(final_texture, false, false);
-        debug("Recycled render");
         return;
     }
     s->must_render = false;
@@ -307,6 +304,9 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     s->frame_index++;
 
     if (render_ok) {
+        // Si je mets compensate_alpha a true ca sort bien MAIS j'ai le pb avec le multi pass
+        // qui est mal géré du coup. Possibilité : précalculer une autre frame interm mais relou/20 ou faire un
+        // truc comme pour les transi avec le current_step==last_step ? Ca me fait un peu chier aussi
         render_texture(interm_texture, false, false);
     }
     else {
@@ -391,16 +391,15 @@ obs_properties_t *shadertastic_filter_properties(void *data) {
         obs_properties_t *effect_group = obs_properties_create();
         //obs_properties_add_text(effect_group, "", effect_name, OBS_TEXT_INFO);
 
-        if (!effect.error_str.empty()) {
+        if (effect.has_error()) {
             obs_properties_t *error_group = obs_properties_create();
             auto prop = obs_properties_add_text(
                 error_group,
                 (effect_name + "__compile_error").c_str(),
-                effect.error_str.c_str(),
-                OBS_TEXT_MULTILINE
+                effect.error_str().c_str(),
+                OBS_TEXT_INFO
             );
-            obs_property_text_set_monospace(prop, true);
-            obs_property_text_set_info_type(prop, OBS_TEXT_INFO_ERROR);
+            obs_property_text_set_info_type(prop, OBS_TEXT_INFO_WARNING);
 
             obs_properties_add_group(props, (effect_name + "__warning").c_str(), "⚠ Shader error", OBS_GROUP_NORMAL, error_group);
             if (s->selected_effect != &effect) {

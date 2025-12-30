@@ -30,6 +30,10 @@ std::shared_ptr<effect_shader> shaders_library_t::load_shader_file(const std::st
         // Effect loading failed. Using the fallback effect to show ERR on the source
         delete new_shader;
         auto emplaced = shaders.emplace(path, fallback_shader);
+        int p = error_str.find("Error creating shader");
+        if (p > 0) {
+            error_str = error_str.replace(p + strlen("Error creating shader:"), 1, "\n");
+        }
         errors.emplace(path, error_str);
         return emplaced.first->second;
     }
@@ -59,6 +63,16 @@ std::shared_ptr<effect_shader> shaders_library_t::get(const std::string &path) {
     }
 }
 
+bool shaders_library_t::has_error(const std::string &path) const {
+    auto it = errors.find(path);
+    if (it == errors.end()) {
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
 std::string shaders_library_t::get_error(const std::string &path) const {
     auto it = errors.find(path);
     if (it == errors.end()) {
@@ -75,8 +89,8 @@ std::string shaders_library_t::get_shader_path(const std::string &path) {
 
 void shaders_library_t::reload(const std::string &path) {
     debug("Reloading Shader '%s'...", path.c_str());
-    std::shared_ptr<effect_shader> shader_to_delete = this->get(path);
     shaders.erase(path);
+    errors.erase(path);
     this->load_shader_file(path);
     debug("Reloading Shader DONE '%s'", path.c_str());
 }

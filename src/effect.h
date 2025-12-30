@@ -24,6 +24,7 @@
 #include "params_list.hpp"
 #include "shader/shader.h"
 #include "parameters/parameter_prev_frame.hpp"
+#include "src/shader/shaders_library.h"
 
 struct shadertastic_effect_t {
     const std::string path;
@@ -37,7 +38,13 @@ struct shadertastic_effect_t {
 
     params_list effect_params;
     std::shared_ptr<effect_shader> main_shader{};
-    std::string error_str{};
+
+    [[nodiscard]] inline bool has_error() const {
+        return shaders_library.has_error(this->path);
+    }
+    [[nodiscard]] inline std::string error_str() const {
+        return shaders_library.get_error(this->path);
+    }
 
     shadertastic_effect_t(std::string name_, std::string path_): name(std::move(name_)), path(std::move(path_)) {}
 
