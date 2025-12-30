@@ -55,6 +55,7 @@ struct shadertastic_transition : public shadertastic_common {
 //----------------------------------------------------------------------------------------------------------------------
 
 struct shadertastic_filter : public shadertastic_common {
+    gs_texrender_t *filter_texrender_pre{};
     gs_texrender_t *filter_texrender{};
     gs_texrender_t *interm_texrender[2]{};
     int interm_texrender_buffer = 1;

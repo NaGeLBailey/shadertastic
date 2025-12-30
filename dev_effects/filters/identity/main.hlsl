@@ -27,9 +27,6 @@ float4 EffectLinear(float2 uv)
     float4 px = current_step == 0 ? image.Sample(textureSampler, uv) : tex_interm.Sample(textureSampler, uv);
     //px.rgb = float3(1.0, 1.0, 1.0);
     //px.a = 1.0;
-    if (current_step == 0) {
-        px.rgb *= (px.a > 0.) ? (1. / px.a) : 0.;
-    }
     return px;
 }
 //----------------------------------------------------------------------------------------------------------------------

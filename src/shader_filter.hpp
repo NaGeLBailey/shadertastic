@@ -119,6 +119,10 @@ static void shadertastic_filter_destroy(void *data) {
         gs_texrender_destroy(s->filter_texrender);
         s->filter_texrender = nullptr;
     }
+    if (s->filter_texrender_pre) {
+        gs_texrender_destroy(s->filter_texrender_pre);
+        s->filter_texrender_pre = nullptr;
+    }
     obs_leave_graphics();
     face_tracking_destroy(s->face_tracking);
     s->release();
@@ -304,9 +308,6 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     s->frame_index++;
 
     if (render_ok) {
-        // Si je mets compensate_alpha a true ca sort bien MAIS j'ai le pb avec le multi pass
-        // qui est mal géré du coup. Possibilité : précalculer une autre frame interm mais relou/20 ou faire un
-        // truc comme pour les transi avec le current_step==last_step ? Ca me fait un peu chier aussi
         render_texture(interm_texture, false, false);
     }
     else {
