@@ -6,14 +6,32 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ## [1.0.0] - 2025-12-06
+This version brings a lot of improvements and rewrites!  
+The metadata file structure has been changed for better evolutionarity of the project.  
+The face tracking is now much faster, especially with multiple face tracking effects stacked.  
+The whole render pipeline has been fully rewritten for the best performance possible.  
+Also: We have MacOS builds now! I don't have a Mac to test it extensively 
+but the alpha testers say everything works perfectly.
+
+But the biggest change, which opens many possibilities, is **the `prev_frame` parameter**!
+It allows an effect to keep track of what happened before, meaning fun stuff like particle simulation
+or recursion effects are now possible!  
+Right now, I have only a few releasable effects to show, but many, **many** more are coming soon... 
+
+
 ### Added
-- `previous_frame` parameter (#ST-2)
+- `prev_frame` parameter (#ST-2)
+- Mac OS support (#ST-5)
 - Multiple effects path support (#ST-37)
 - Added `metafileVersion` to the meta file in order to anticipate future changes
 - Added json-schema and d.ts files for reference and IDE support
 - Added `frame_index` parameter, counting the number of frames since the transition started or the effect is visible (#ST-36)
 - `is_studio_mode` parameter, mostly for development purpose (#ST-38)
-- Show compile errors in the UI (#ST-39) 
+- Show compile errors in the UI (#ST-39)
+- [Filter] New built-in effect "Color invert"
+- [Filter] New built-in effect "Ghost"
+- [Filter] New built-in effect "Recursion"
+- Added a meta.json definition file `meta.d.ts`
 
 ### Fixed
 - Fixed `obs_get_source_properties("shadertastic_transition")` and `obs_get_source_properties("shadertastic_filter")` crashing OBS
@@ -21,21 +39,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Reset `prev_time` on visibility toggle
 - Updated plugin name for OBS 32
 - Fixed "Crashes when reading OBS properties by source ID" (issue #11)
+- Alpha compensation (#ST-41)
 
 ### Changed
 - Replaced CMake build with newest template from OBS 30.2: https://github.com/obsproject/obs-plugintemplate/commit/7c017427c9ee2accc74be525e3cbf2ace5549b6c (#ST-5)
 - Migrated `input_type` option as parameter `time` (#ST-34)
 - Migrated `input_facedetection` option as parameter `facetracking` (#ST-35)
 - Moved export buttons above the about box
+- Renamed default filter name to "Shadertastic" instead of "Shadertastic filter"
+- Listing effects by label instead of name
 - Face tracking: Slightly improved the crop192 filter
 - Face tracking: slight performance improvement & do not execute the face mesh if a face is not detected
+- Face tracking: Updated ONNX Runtime from `1.17.1` to `1.23.2`
 - Performance: shared placeholder textures for all filters and transitions
-- Updated ONNX Runtime from `1.17.1` to `1.23.2`
-
-### Effects
-- Rainbow effect: added random mode
-- Laser eyes: performance improvement by using static data
-- Added "Color invert" filters
+- [Filter] Gaussian Blur: better alpha management
+- [Filter] Rainbow effect: added random mode
+- [Filter] Laser eyes: performance improvement by using static data
 
 ### Removed
 - Face tracking: removed eye points parameters (`fd_leye_1` and similar) (#ST-35)
