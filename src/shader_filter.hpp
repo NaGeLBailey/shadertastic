@@ -204,10 +204,6 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
         /*else {
             s->frame_index++;
         }*/
-
-        if (s->filter_texrender) {
-            gs_texrender_reset(s->filter_texrender);
-        }
     }
     if (is_enabled != s->was_enabled) {
         s->was_enabled = is_enabled;
