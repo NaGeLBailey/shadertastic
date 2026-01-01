@@ -81,13 +81,15 @@ cv::Mat extractImage(gs_texture_t *tex) {
     auto staging_texture = gs_stagesurface_create(cx, cy, color_format);
     gs_stage_texture(staging_texture, tex);
 
-    uint8_t *data;
+    uint8_t *gpu_data;
     uint32_t linesize;
     cv::Mat imageRGBA;
-    if (gs_stagesurface_map(staging_texture, &data, &linesize)) {
+
+    if (gs_stagesurface_map(staging_texture, &gpu_data, &linesize)) {
         // Convert RGBA to BGR
         //debug_trace("  1 %lu", get_time_us()-tic);
-        imageRGBA = cv::Mat(cy, cx, get_opencv_format(color_format), data);
+        imageRGBA = cv::Mat(cy, cx, get_opencv_format(color_format));
+        memcpy(imageRGBA.data, gpu_data, linesize*cy);
         //debug_trace("  2 %lu", get_time_us()-tic);
 
         gs_stagesurface_unmap(staging_texture);

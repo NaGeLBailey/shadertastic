@@ -270,11 +270,9 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
 
     bool render_ok = true;
     for (int current_step=0; current_step < selected_effect->nb_steps; ++current_step) {
-        bool texrender_ok = true;
-
         s->interm_texrender_buffer = s->interm_texrender_buffer ^ 1;
         gs_texrender_reset(s->interm_texrender[s->interm_texrender_buffer]);
-        texrender_ok = gs_texrender_begin_with_color_space(s->interm_texrender[s->interm_texrender_buffer], cx, cy, GS_CS_SRGB_16F);
+        bool texrender_ok = gs_texrender_begin_with_color_space(s->interm_texrender[s->interm_texrender_buffer], cx, cy, GS_CS_SRGB_16F);
 
         if (!texrender_ok) {
             render_ok = false;
@@ -302,6 +300,11 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     }
 
     s->frame_index++;
+    for (auto *prev_frame : selected_effect->prev_frames_to_keep) {
+        if (prev_frame != nullptr) {
+            prev_frame->next_frame();
+        }
+    }
 
     if (render_ok) {
         render_texture(interm_texture, false, false);

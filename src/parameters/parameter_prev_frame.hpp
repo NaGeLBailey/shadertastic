@@ -88,7 +88,7 @@ class effect_parameter_prev_frame : public effect_parameter {
 
         void try_gs_set_val() override {
             //debug("try_gs_set_val %i", prev_texrender_buffer);
-            try_gs_effect_set_texture(name.c_str(), shader_param, prev_texture);
+            try_gs_effect_set_texture(name.c_str(), shader_param, gs_texrender_get_texture(prev_texrender[prev_texrender_buffer]));
         }
 
         void reset() {
@@ -96,10 +96,10 @@ class effect_parameter_prev_frame : public effect_parameter {
         }
 
         bool attach(const uint32_t cx, const uint32_t cy, const gs_color_space source_space) {
-            prev_texrender_buffer = prev_texrender_buffer ^ 1;
+            const int next_texrender_buffer = prev_texrender_buffer ^ 1;
             //debug("attach %i", prev_texrender_buffer);
-            gs_texrender_reset(prev_texrender[prev_texrender_buffer]);
-            bool texrender_ok = gs_texrender_begin_with_color_space(prev_texrender[prev_texrender_buffer], cx, cy, source_space);
+            gs_texrender_reset(prev_texrender[next_texrender_buffer]);
+            bool texrender_ok = gs_texrender_begin_with_color_space(prev_texrender[next_texrender_buffer], cx, cy, source_space);
             if (texrender_ok) {
                 constexpr vec4 clear_color{0,0,0,0};
                 gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
@@ -111,9 +111,14 @@ class effect_parameter_prev_frame : public effect_parameter {
             return texrender_ok;
         }
 
-        void detach() {
-            gs_texrender_end(prev_texrender[prev_texrender_buffer]);
-            prev_texture = gs_texrender_get_texture(prev_texrender[prev_texrender_buffer]);
+        const gs_texrender_t * detach() {
+            const int next_texrender_buffer = prev_texrender_buffer ^ 1;
+            gs_texrender_end(prev_texrender[next_texrender_buffer]);
+            return prev_texrender[next_texrender_buffer];
+        }
+
+        void next_frame() {
+            prev_texrender_buffer = prev_texrender_buffer ^ 1;
         }
 
         /*void detach(const uint32_t cx, const uint32_t cy, const bool is_srgb) {

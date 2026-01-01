@@ -192,55 +192,71 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
         obs_source_t *target_source = obs_filter_get_target(s->source);
         const gs_color_space source_space = obs_source_get_color_space(target_source, OBS_COUNTOF(preferred_spaces), preferred_spaces);
 
+//        if (s->frame_index == 0) {
+//            auto matA = extractImage(a);
+//            auto matB = extractImage(b);
+//            saveMat(matA, "/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/tex_a.png");
+//            saveMat(matB, "/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/tex_b.png");
+//        }
+
         bool render_ok = true;
         for (int current_step=0; current_step < effect->nb_steps; ++current_step) {
-            bool is_final_step = current_step == effect->nb_steps - 1;
             bool is_saved_step = effect->prev_frames_to_keep[current_step] != nullptr;
-            bool is_interm_step = !is_final_step || is_saved_step;
 
-            if (is_interm_step) {
-                s->transition_texrender_buffer = (s->transition_texrender_buffer + 1) & 1;
-                gs_texrender_reset(s->transition_texrender[s->transition_texrender_buffer]);
-                bool texrender_ok = gs_texrender_begin_with_color_space(s->transition_texrender[s->transition_texrender_buffer], cx, cy, source_space);
-
+            if (is_saved_step) {
+                bool texrender_ok = effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space);
                 if (!texrender_ok) {
                     render_ok = false;
                     break;
                 }
-
-                gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
-                gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
             }
-            // if (texrender_ok && is_saved_step) {
-            //     texrender_ok = effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space);
-            // }
+            else {
+                s->transition_texrender_buffer = (s->transition_texrender_buffer + 1) & 1;
+                gs_texrender_reset(s->transition_texrender[s->transition_texrender_buffer]);
+                bool texrender_ok = gs_texrender_begin_with_color_space(s->transition_texrender[s->transition_texrender_buffer], cx, cy, source_space);
+                if (!texrender_ok) {
+                    render_ok = false;
+                    break;
+                }
+            }
+
+            gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
+            gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
 
             gs_blend_state_push();
             gs_blend_function_separate(
-                GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
+                GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
                 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
             );
             effect->set_params(a, b, s->frame_index, is_studio_mode, t, s->delta_time, cx, cy, s->rand_seed);
             effect->set_step_params(current_step, interm_texture);
-            effect->render_shader(cx, cy, is_interm_step);
-            if (is_interm_step) {
+            effect->render_shader(cx, cy, true);
+
+            if (is_saved_step) {
+                const gs_texrender_t *next_texrender = effect->prev_frames_to_keep[current_step]->detach();
+                interm_texture = gs_texrender_get_texture(next_texrender);
+            }
+            else {
                 gs_texrender_end(s->transition_texrender[s->transition_texrender_buffer]);
                 interm_texture = gs_texrender_get_texture(s->transition_texrender[s->transition_texrender_buffer]);
             }
 
-            if (is_saved_step) {
-                if (effect->prev_frames_to_keep[current_step]->attach(cx, cy, source_space)) {
-                    render_texture(interm_texture, false, false);
-                    effect->prev_frames_to_keep[current_step]->detach();
-                }
-            }
             gs_blend_state_pop();
         }
 
+//        if (s->frame_index == 0) {
+//            auto mat = extractImage(interm_texture);
+//            saveMat(mat, "/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/tex_interm.png");
+//        }
+
         if (render_ok) {
-            if (effect->prev_frames_to_keep[effect->nb_steps-1] != nullptr) {
-                render_texture(interm_texture, false, false);
-            }
+            render_texture(interm_texture, false, false);
+        }
+    }
+
+    for (auto *prev_frame : effect->prev_frames_to_keep) {
+        if (prev_frame != nullptr) {
+            prev_frame->next_frame();
         }
     }
 
