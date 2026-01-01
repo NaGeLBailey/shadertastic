@@ -89,7 +89,7 @@ type param_facetracking = param_common & {
      *
      * @defaut false
      */
-    allow_chaining: boolean,
+    allow_chaining?: boolean,
 }
 
 /**

@@ -1,4 +1,10 @@
 {
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io",
+    "description": "Blur from one scene to another"
+  },
+  "metafileVersion": 1,
   "label": "Gaussian Blur",
   "steps": 3,
   "parameters": [

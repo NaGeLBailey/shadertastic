@@ -31,24 +31,10 @@ float sigmoid(float strength, float n) {
     //return (1 / (1 + exp(-n)));
 
     n = strength * (n*2 - 1);
-    float v0 = (1 / (1 + exp(strength)));
+    float v0 = 1 / (1 + exp(strength));
     float v1 = 1 - v0; // simplified from v1 = (1 / (1 + exp(-1 * strength)));
 
     return (1 / (1 + exp(-n)) - v0) / (v1-v0);
-
-//    if (n < 0.5) {
-//        if (n < 0.0) {
-//            return 0.0;
-//        }
-//        return 4.0*n*n*n;
-//    }
-//    else {
-//        if (n > 1.0) {
-//            return 1.0;
-//        }
-//        float xx = -2.0*n+2.0;
-//        return 1.0 - xx*xx*xx / 2.0;
-//    }
 }
 
 float sigmoid_centered(float strength, float center, float n) {
@@ -68,42 +54,59 @@ float gaussian(float x) {
 }
 
 float4 getGaussianU(float2 uv, int nb_samples) {
-    float gaussian_sum = gaussian(0);
-    float4 px_out = tex_interm.Sample(textureSampler, uv) * gaussian_sum;
+    float4 px_out = tex_interm.Sample(textureSampler, uv);
+    float gaussian_sum_alpha = gaussian(0);
+    float gaussian_sum = gaussian_sum_alpha * px_out[3];
+    px_out.rgb *= px_out[3];
     float nb_samples_f = float(nb_samples);
+    #ifdef _D3D11
+    [unroll(50)]
+    #endif
     for (int i=1; i<nb_samples; ++i) {
         float du = i*upixel;
         float4 px_right = tex_interm.Sample(textureSampler, float2(uv[0]+du, uv[1]));
         float4 px_left = tex_interm.Sample(textureSampler, float2(uv[0]-du, uv[1]));
 
         float k = gaussian(float(i) / nb_samples_f);
-        px_out += (px_right + px_left)*k;
-        gaussian_sum += 2*k;
+        float alpha_impact = k * (px_right.a + px_left.a);
+        px_out.rgb += k * (px_right.rgb*px_right.a + px_left.rgb*px_left.a);
+        px_out.a += alpha_impact;
+        gaussian_sum += alpha_impact;
+        gaussian_sum_alpha += 2*k;
     }
-    return px_out / gaussian_sum;
+    px_out.rgb /= gaussian_sum;
+    px_out[3] /= gaussian_sum_alpha;
+    return px_out;
 }
 
 float4 getGaussianV(float2 uv, int nb_samples) {
-    float gaussian_sum = gaussian(0);
-    float4 px_out = tex_interm.Sample(textureSampler, uv) * gaussian_sum;
+    float4 px_out = tex_interm.Sample(textureSampler, uv);
+    float gaussian_sum_alpha = gaussian(0);
+    float gaussian_sum = gaussian_sum_alpha * px_out[3];
+    px_out.rgb *= px_out[3];
     float nb_samples_f = float(nb_samples);
+    #ifdef _D3D11
+    [unroll(50)]
+    #endif
     for (int i=1; i<nb_samples; ++i) {
         float dv = i*vpixel;
         float4 px_right = tex_interm.Sample(textureSampler, float2(uv[0], uv[1]+dv));
         float4 px_left = tex_interm.Sample(textureSampler, float2(uv[0], uv[1]-dv));
 
         float k = gaussian(float(i) / nb_samples_f);
-        px_out += (px_right + px_left)*k;
-        gaussian_sum += 2*k;
+        float alpha_impact = k * (px_right.a + px_left.a);
+        px_out.rgb += k * (px_right.rgb*px_right.a + px_left.rgb*px_left.a);
+        px_out.a += alpha_impact;
+        gaussian_sum += alpha_impact;
+        gaussian_sum_alpha += 2*k;
     }
-    return px_out / gaussian_sum;
+    px_out.rgb /= gaussian_sum;
+    px_out[3] /= gaussian_sum_alpha;
+    return px_out;
 }
 
 float4 EffectLinear(float2 uv)
 {
-    float u = uv[0];
-    float v = uv[1];
-
     if (current_step == 0) {
         float lerp_ratio = sigmoid_centered(10, break_point, time);
         float4 px_a = tex_a.Sample(textureSampler, uv);
