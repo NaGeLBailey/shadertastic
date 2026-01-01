@@ -1,4 +1,10 @@
 {
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io",
+    "description": "Pixelate scene and unpixelate to the other"
+  },
+  "metafileVersion": 1,
   "label": "Pixelate",
   "parameters": [
     {

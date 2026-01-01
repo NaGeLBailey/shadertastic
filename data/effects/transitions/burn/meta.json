@@ -1,4 +1,9 @@
 {
+  "about": {
+    "author_name": "xurei",
+    "author_url": "http://about.xurei.io"
+  },
+  "metafileVersion": 1,
   "label": "Burn",
   "revision": 2,
   "steps": 1,

@@ -9,6 +9,14 @@
   "steps": 1,
   "parameters": [
     {
+      "name": "time",
+      "label": "time",
+      "type": "time",
+      "speed": {
+        "default": 0.2
+      }
+    },
+    {
       "name": "mode",
       "label": "Rainbow Mode",
       "type": "list_int",
@@ -17,11 +25,6 @@
         {"label": "Random", "value": 1}
       ],
       "default": 0
-    },
-    {
-      "name": "time",
-      "label": "time",
-      "type": "time"
     }
   ]
 }
