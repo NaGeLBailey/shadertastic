@@ -5,7 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## [1.0.0] - 2025-12-06
+## [1.0.0] - 2026-01-01
+Happy New Year !
 This version brings a lot of improvements and rewrites!  
 The metadata file structure has been changed for better evolutionarity of the project.  
 The face tracking is now much faster, especially with multiple face tracking effects stacked.  
