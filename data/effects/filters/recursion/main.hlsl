@@ -18,6 +18,7 @@ uniform float zoom;
 uniform float center_x;
 uniform float center_y;
 uniform bool show_debug_point;
+uniform int reset_on_toggle;
 //----------------------------------------------------------------------------------------------------------------------
 
 // These are required objects for the shader to work.
@@ -93,41 +94,42 @@ float4 EffectLinear(float2 uv)
         }
         return px_out;
     }
-
-    if (frame_index < 1) {
-        return image.Sample(textureSampler, uv);
-    }
-
-    uv2 = (uv2*zoom_ratio) + float2(center_x, 1.0-center_y);
-
-    float r = length(uv2 * float2(vpixel/upixel, 1.0));
-
-    float4 px = image.Sample(textureSampler, uv);
-    float4 prev_px = float4(0.0,0.0,0.0, 0.0); //prev_image.Sample(textureSampler, uv2);
-
-    for (float du=-upixel; du <= upixel; du += upixel) {
-        for (float dv=-vpixel; dv <= vpixel; dv += vpixel) {
-            prev_px += prev_image.Sample(textureSampler, uv2 + float2(du,dv));
+    else {
+        if (frame_index < 1 && reset_on_toggle == 0) {
+            return image.Sample(textureSampler, uv);
         }
+
+        uv2 = (uv2*zoom_ratio) + float2(center_x, 1.0-center_y);
+
+        float r = length(uv2 * float2(vpixel/upixel, 1.0));
+
+        float4 px = image.Sample(textureSampler, uv);
+        float4 prev_px = float4(0.0,0.0,0.0, 0.0); //prev_image.Sample(textureSampler, uv2);
+
+        for (float du=-upixel; du <= upixel; du += upixel) {
+            for (float dv=-vpixel; dv <= vpixel; dv += vpixel) {
+                prev_px += prev_image.Sample(textureSampler, uv2 + float2(du,dv));
+            }
+        }
+        prev_px *= 1.0/9.0;
+
+        float4 px_small = image.Sample(textureSampler, uv2);
+
+        float alpha = px[3];
+        alpha = max(alpha, (prev_px[3])*prev_alpha);
+        alpha = max(alpha, (px_small[3])*prev_alpha);
+        alpha = clamp(alpha, 0.0, 1.0);
+
+        float4 px_out = float4(0.0, 0.0, 0.0, alpha);
+
+        px_out.rgb = lerp(
+            prev_px.rgb,
+            px.rgb,
+            px[3]
+        );
+
+        return px_out;
     }
-    prev_px *= 1.0/9.0;
-
-    float4 px_small = image.Sample(textureSampler, uv2);
-
-    float alpha = px[3];
-    alpha = max(alpha, (prev_px[3])*prev_alpha);
-    alpha = max(alpha, (px_small[3])*prev_alpha);
-    alpha = clamp(alpha, 0.0, 1.0);
-
-    float4 px_out = float4(0.0, 0.0, 0.0, alpha);
-
-    px_out.rgb = lerp(
-        prev_px.rgb,
-        px.rgb,
-        px[3]
-    );
-
-    return px_out;
 }
 //----------------------------------------------------------------------------------------------------------------------
 

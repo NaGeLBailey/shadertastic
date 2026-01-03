@@ -54,6 +54,22 @@
       "default": 0.5
     },
     {
+      "type": "list_int",
+      "name": "reset_on_toggle",
+      "label": "On filter visibility toggle:",
+      "values": [
+        {
+          "value": 0,
+          "label": "Reset"
+        },
+        {
+          "value": 1,
+          "label": "Keep"
+        }
+      ],
+      "default": 0
+    },
+    {
       "name": "show_debug_point",
       "label": "Show debug elements",
       "type": "bool",
