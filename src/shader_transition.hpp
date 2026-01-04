@@ -252,11 +252,11 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
         if (render_ok) {
             render_texture(interm_texture, false, false);
         }
-    }
 
-    for (auto *prev_frame : effect->prev_frames_to_keep) {
-        if (prev_frame != nullptr) {
-            prev_frame->next_frame();
+        for (auto *prev_frame : effect->prev_frames_to_keep) {
+            if (prev_frame != nullptr) {
+                prev_frame->next_frame();
+            }
         }
     }
 
