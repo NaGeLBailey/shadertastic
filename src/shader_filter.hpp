@@ -95,12 +95,12 @@ static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *sour
         // LEGACY - input_time is deprecated. Migrating it as a parameter
         if (effect.legacy_input_time) {
             obs_data_set_default_double(settings, get_full_param_name_static(effect_name, "speed").c_str(), 0.1);
-            double speed = obs_data_get_double(settings, get_full_param_name_static(effect_name, "speed").c_str());
-            obs_data_set_default_double(settings, get_full_param_name_static(effect_name, "time_speed").c_str(), speed);
+            double legacy_speed = obs_data_get_double(settings, get_full_param_name_static(effect_name, "speed").c_str());
+            obs_data_set_default_double(settings, get_full_param_name_static(effect_name, "time_speed").c_str(), legacy_speed);
 
             obs_data_set_default_bool(settings, get_full_param_name_static(effect_name, "reset_time_on_show").c_str(), false);
-            bool reset_time_on_show = obs_data_get_bool(settings, get_full_param_name_static(effect_name, "reset_time_on_show").c_str());
-            obs_data_set_default_bool(settings, get_full_param_name_static(effect_name, "time_reset_time_on_show").c_str(), reset_time_on_show);
+            bool legacy_reset_time_on_show = obs_data_get_bool(settings, get_full_param_name_static(effect_name, "reset_time_on_show").c_str());
+            obs_data_set_default_bool(settings, get_full_param_name_static(effect_name, "time_reset_time_on_show").c_str(), legacy_reset_time_on_show);
         }
     }
 
