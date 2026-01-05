@@ -32,12 +32,26 @@ class effect_parameter_prev_frame : public effect_parameter {
         int prev_texrender_buffer = 0;
 
     public:
-        gs_texture_t *prev_texture;
         explicit effect_parameter_prev_frame(gs_eparam_t *shader_param)
-        : effect_parameter(sizeof(float), shader_param), prev_texture(shadertastic_transparent_texture) {
+        : effect_parameter(sizeof(float), shader_param) {
         }
 
         ~effect_parameter_prev_frame() override {
+            release_texrenders();
+        }
+
+        inline void init_texrenders() {
+            obs_enter_graphics();
+            if (prev_texrender[0] == nullptr) {
+                prev_texrender[0] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
+            }
+            if (prev_texrender[1] == nullptr) {
+                prev_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
+            }
+            obs_leave_graphics();
+        }
+
+        inline void release_texrenders() {
             obs_enter_graphics();
             if (prev_texrender[0] != nullptr) {
                 gs_texrender_destroy(prev_texrender[0]);
@@ -64,9 +78,7 @@ class effect_parameter_prev_frame : public effect_parameter {
             obs_data_set_default_int(metadata, "step", -1); // -1 means "the last step". This way by default we take the last step, i.e. the actually rendered frame
             step_ = (int)obs_data_get_int(metadata, "step");
 
-            prev_texrender[0] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
-            prev_texrender[1] = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
-            reset();
+            init_texrenders();
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {
@@ -88,16 +100,23 @@ class effect_parameter_prev_frame : public effect_parameter {
 
         void try_gs_set_val() override {
             //debug("try_gs_set_val %i", prev_texrender_buffer);
+            if (!prev_texrender[prev_texrender_buffer]) {
+                return;
+            }
             try_gs_effect_set_texture(name.c_str(), shader_param, gs_texrender_get_texture(prev_texrender[prev_texrender_buffer]));
         }
 
         void reset() {
-            prev_texture = shadertastic_transparent_texture;
+            release_texrenders();
+            init_texrenders();
         }
 
         bool attach(const uint32_t cx, const uint32_t cy, const gs_color_space source_space) {
             const int next_texrender_buffer = prev_texrender_buffer ^ 1;
             //debug("attach %i", prev_texrender_buffer);
+
+            //init_texrenders(); // Probably not required, but ensures there is a texrender
+
             gs_texrender_reset(prev_texrender[next_texrender_buffer]);
             bool texrender_ok = gs_texrender_begin_with_color_space(prev_texrender[next_texrender_buffer], cx, cy, source_space);
             if (texrender_ok) {
@@ -120,36 +139,6 @@ class effect_parameter_prev_frame : public effect_parameter {
         void next_frame() {
             prev_texrender_buffer = prev_texrender_buffer ^ 1;
         }
-
-        /*void detach(const uint32_t cx, const uint32_t cy, const bool is_srgb) {
-            gs_texrender_end(prev_texrender);
-            cur_texture = gs_texrender_get_texture(prev_texrender);
-            //obs_source_t *parent_source = obs_filter_get_parent(source);
-            //debug("is last: %s", is_last_filter ? "YES" : "NO");
-
-            if (cur_texture) {
-                gs_blend_state_push();
-                //gs_blend_function(GS_BLEND_ONE, is_last_filter ? GS_BLEND_INVSRCALPHA : GS_BLEND_ZERO);
-                gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
-
-                {
-                    gs_effect_t *default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
-                    gs_technique_t *tech = gs_effect_get_technique(default_effect, is_srgb ? "DrawSrgbDecompress" : "Draw");
-                    gs_eparam_t *image = gs_effect_get_param_by_name(default_effect, "image");
-                    gs_effect_set_texture(image, cur_texture);
-                    //gs_effect_set_float(gs_effect_get_param_by_name(default_effect, "multiplier"), 1.0);
-
-                    if (gs_technique_begin(tech)) {
-                        if (gs_technique_begin_pass(tech, 0)) {
-                            gs_draw_sprite(nullptr, 0, cx, cy);
-                            gs_technique_end_pass(tech);
-                        }
-                        gs_technique_end(tech);
-                    }
-                }
-                gs_blend_state_pop();
-            }
-        }*/
 };
 
 #endif // SHADERTASTIC_PARAMETER_PREV_FRAME_HPP

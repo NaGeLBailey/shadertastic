@@ -38,6 +38,9 @@ obs_properties_t *shadertastic_filter_properties(void *data);
 static shadertastic_filter *shadertastic_no_filter = nullptr;
 
 static void *shadertastic_filter_create(obs_data_t *settings, obs_source_t *source);
+
+void shadertastic_filter_show(void *data);
+void shadertastic_filter_hide(void *data);
 //----------------------------------------------------------------------------------------------------------------------
 
 static shadertastic_filter* shadertastic_filter_cast(void *data) {
@@ -193,20 +196,17 @@ static void shadertastic_filter_tick(void *data, float deltatime_seconds) {
         }
         if (!s->was_enabled) {
             s->frame_index = 0;
-            if (s->selected_effect != nullptr) {
-                for (auto *prev_frame_to_keep : s->selected_effect->prev_frames_to_keep) {
-                    if (prev_frame_to_keep != nullptr) {
-                        prev_frame_to_keep->reset();
-                    }
-                }
-            }
         }
-        /*else {
-            s->frame_index++;
-        }*/
     }
     if (is_enabled != s->was_enabled) {
         s->was_enabled = is_enabled;
+
+        if (is_enabled) {
+            shadertastic_filter_show(s);
+        }
+        else {
+            shadertastic_filter_hide(s);
+        }
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -449,18 +449,24 @@ static gs_color_space shadertastic_filter_get_color_space(void *data, size_t cou
 
 void shadertastic_filter_show(void *data) {
     shadertastic_filter *s = shadertastic_filter_cast(data);
-    shadertastic_effect_t *selected_effect = s->selected_effect;
-    if (selected_effect != nullptr) {
-        selected_effect->show();
+    if (!s->is_showing) {
+        s->is_showing = true;
+        shadertastic_effect_t *selected_effect = s->selected_effect;
+        if (selected_effect != nullptr) {
+            selected_effect->show();
+        }
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
 
 void shadertastic_filter_hide(void *data) {
     shadertastic_filter *s = shadertastic_filter_cast(data);
-    shadertastic_effect_t *selected_effect = s->selected_effect;
-    if (selected_effect != nullptr) {
-        selected_effect->hide();
+    if (s->is_showing) {
+        s->is_showing = false;
+        shadertastic_effect_t *selected_effect = s->selected_effect;
+        if (selected_effect != nullptr) {
+            selected_effect->hide();
+        }
     }
 }
 //----------------------------------------------------------------------------------------------------------------------

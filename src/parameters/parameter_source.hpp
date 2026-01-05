@@ -42,10 +42,10 @@ class effect_parameter_source : public effect_parameter {
         gs_texrender_t *source_texrender = nullptr;
         obs_weak_source_t *source = nullptr;
         struct vec4 clear_color{0,0,0,0};
+        bool source_rendered = false;
 
     public:
         explicit effect_parameter_source(gs_eparam_t *shader_param) : effect_parameter(sizeof(float), shader_param) {
-            this->source_texrender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
         }
 
         ~effect_parameter_source() override {
@@ -53,6 +53,18 @@ class effect_parameter_source : public effect_parameter {
                 obs_weak_source_release(this->source);
                 this->source = nullptr;
             }
+            this->release_texrender();
+        }
+
+        inline void init_texrender() {
+            if (this->source_texrender == nullptr) {
+                obs_enter_graphics();
+                this->source_texrender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
+                obs_leave_graphics();
+            }
+        }
+
+        inline void release_texrender() {
             if (this->source_texrender != nullptr) {
                 obs_enter_graphics();
                 gs_texrender_destroy(this->source_texrender);
@@ -95,8 +107,10 @@ class effect_parameter_source : public effect_parameter {
                 this->hide();
                 #ifdef DEV_MODE
                     obs_source_t *ref_source2 = obs_weak_source_get_source(this->source);
-                    debug("Release source %s", obs_source_get_name(ref_source2));
-                    obs_source_release(ref_source2);
+                    if (ref_source2 != nullptr) {
+                        debug("Release source %s", obs_source_get_name(ref_source2));
+                        obs_source_release(ref_source2);
+                    }
                 #endif
                 obs_weak_source_release(this->source);
                 this->source = nullptr;
@@ -117,24 +131,34 @@ class effect_parameter_source : public effect_parameter {
             }
         }
 
+        void tick(shadertastic_common *s) override {
+            UNUSED_PARAMETER(s);
+            source_rendered = false;
+        }
+
         void try_gs_set_val() override {
-            if (this->source != nullptr) {
-                gs_texrender_reset(this->source_texrender);
+            if (!source_rendered && this->source != nullptr) {
                 obs_source_t *ref_source = obs_weak_source_get_source(this->source);
                 if (ref_source != nullptr) {
                     uint32_t cx = obs_source_get_width(ref_source);
                     uint32_t cy = obs_source_get_height(ref_source);
+                    gs_texrender_reset(this->source_texrender);
                     if (gs_texrender_begin(this->source_texrender, cx, cy)) {
                         gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
                         gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f); // This line took me A WHOLE WEEK to figure out
                         obs_source_video_render(ref_source);
                         gs_texrender_end(this->source_texrender);
-                        gs_texture_t *texture = gs_texrender_get_texture(this->source_texrender);
-                        try_gs_effect_set_texture(name.c_str(), shader_param, texture);
                     }
                     obs_source_release(ref_source);
                 }
+                source_rendered = true;
             }
+
+            if (!this->source_texrender || !source_rendered) {
+                return;
+            }
+            gs_texture_t *texture = gs_texrender_get_texture(this->source_texrender);
+            try_gs_effect_set_texture(name.c_str(), shader_param, texture);
         }
 
         void show() override {
@@ -147,7 +171,9 @@ class effect_parameter_source : public effect_parameter {
             }
             debug("Inc showing %s", obs_source_get_name(ref_source));
             obs_source_inc_showing(ref_source);
+            obs_source_inc_active(ref_source);
             obs_source_release(ref_source);
+            this->init_texrender();
         }
 
         void hide() override {
@@ -160,7 +186,9 @@ class effect_parameter_source : public effect_parameter {
             }
             debug("Dec showing %s", obs_source_get_name(ref_source));
             obs_source_dec_showing(ref_source);
+            obs_source_dec_active(ref_source);
             obs_source_release(ref_source);
+            this->release_texrender();
         }
 };
 

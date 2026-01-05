@@ -62,6 +62,7 @@ struct shadertastic_filter : public shadertastic_common {
     float rand_seed{};
     uint32_t width{}, height{};
     bool should_reload = false;
+    bool is_showing = false;
 
     void release() {
         if (this->effects != nullptr) {
