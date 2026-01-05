@@ -283,8 +283,7 @@ type param_time = param_common & {
      */
     speed?: {
         /**
-         * If true, the time will be reset to zero when the filter is set visible.
-         * If "prompt", let the user decide by showing an input in the property UI.
+         * If true, the speed slider will be show in the effects properties
          * @default: true
          */
         show_ui?: boolean,
