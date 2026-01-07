@@ -96,7 +96,7 @@ bool shadertastic_source_process_filter_begin_with_color_space(obs_source_t *fil
 
         gs_blend_state_push();
         gs_blend_function_separate(
-            GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
+            GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA,
             GS_BLEND_ONE, GS_BLEND_INVSRCALPHA
         );
 		gs_clear(GS_CLEAR_COLOR, &clear_color, 0.0f, 0);
@@ -111,6 +111,7 @@ bool shadertastic_source_process_filter_begin_with_color_space(obs_source_t *fil
 
 		gs_blend_state_pop();
 		gs_texrender_end(s->filter_texrender_pre);
+        //auto mat = extractImage(gs_texrender_get_texture(s->filter_texrender_pre));
 
 		if (!s->filter_texrender) {
 			s->filter_texrender = gs_texrender_create(GS_RGBA16, GS_ZS_NONE);
@@ -121,6 +122,7 @@ bool shadertastic_source_process_filter_begin_with_color_space(obs_source_t *fil
 			gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f);
 			render_texture(gs_texrender_get_texture(s->filter_texrender_pre), true, true);
 			gs_texrender_end(s->filter_texrender);
+            //auto mat2 = extractImage(gs_texrender_get_texture(s->filter_texrender_pre));
 			gs_texrender_reset(s->filter_texrender_pre);
 		}
 	}
