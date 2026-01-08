@@ -41,6 +41,12 @@ type param_common = {
  * This allows for creating effects that react to sound or music.
  *
  * @shaderparam `uniform float`
+ *
+ * @example ```{
+ *   "type": "audiolevel",
+ *   "name": "audio_level",
+ *   "label": "Audio Level"
+ * }```
  */
 type param_audiolevel = param_common & {
     type: "audiolevel",
@@ -52,6 +58,13 @@ type param_audiolevel = param_common & {
  * This will show a Yes/No input UI in the effect properties.
  *
  * @shaderparam `uniform bool`
+ *
+ * @example ```{
+ *   "type": "bool",
+ *   "name": "my_bool",
+ *   "default": true,
+ *   "label": "A boolean"
+ * }```
  */
 type param_bool = param_common & {
     type: "bool",
@@ -62,6 +75,11 @@ type param_bool = param_common & {
  * Color parameter
  *
  * @shaderparam `uniform float4`
+ *
+ * @example ```{
+ *   "type": "color",
+ *   "default": "#99ABCDEF"
+ * }```
  */
 type param_color = param_common & {
     type: "color",
@@ -76,6 +94,11 @@ type param_color = param_common & {
  * Use the face tracking functionnality.
  *
  * @shaderparam `uniform texture2d`
+ *
+ * @example ```{
+ *   "type": "facetracking",
+ *   "name": "fd"
+ * }```
  */
 type param_facetracking = param_common & {
     type: "facetracking",
@@ -99,6 +122,17 @@ type param_facetracking = param_common & {
  * It allows for configuring numeric inputs with options like sliders and value constraints.
  *
  * @shaderparam `uniform float`
+ *
+ * @example ```{
+ *   "type": "float",
+ *   "name": "my_float_value",
+ *   "label": "My float",
+ *   "slider": true,
+ *   "min": 0.0,
+ *   "max": 2.0,
+ *   "default": 1.0,
+ *   "step": 0.01
+ * }```
  */
 type param_float = param_common & {
     type: "float" | "double",
@@ -129,10 +163,25 @@ type param_float = param_common & {
 /**
  * Image parameter.
  *
- * @shaderparam `uniform texture2d`
- *
  * It can be either a bundled image in your effect (e.g. a font map to draw text),a file input
  * in the filter properties, or both.
+ *
+ * @shaderparam `uniform texture2d`
+ *
+ * @example ```{
+ *   "name": "grid_pattern",
+ *   "label": "Pattern",
+ *   "type": "image",
+ *   "values": [
+ *     {"label": "Pattern1", "value": "pattern1.png"},
+ *     {"label": "Pattern2", "value": "pattern2.png"},
+ *     {"label": "Pattern3", "value": "pattern3.png"},
+ *     {"label": "Pattern4", "value": "pattern4.png"}
+ *   ],
+ *   "default": "pattern1.png",
+ *   "allow_custom": true,
+ *   "hidden": false
+ * }```
  */
 type param_image = param_common & {
     type: "image",
@@ -146,15 +195,15 @@ type param_image = param_common & {
     /**
      * Optional list of pre-defined images.
      *
-     * These files must be in the same folder of you effect, or in the same packaged .shadertastic file to be accepted
+     * These files must be in the same folder of you effect, or in the same packaged .shadertastic file to be valid.
      *
      * If `allowed_custom` is true, another pick "Use custom file" will also be available in the UI.
-     * @example values: [
-     *         {"label": "Map", "value": "map.png"},
-     *         {"label": "Map2", "value": "map2.png"},
-     *         {"label": "Map3", "value": "map3.png"},
-     *         {"label": "Map4", "value": "map4.png"}
-     *       ]
+     * @example ```[
+     *   {"label": "Map", "value": "map.png"},
+     *   {"label": "Map2", "value": "map2.png"},
+     *   {"label": "Map3", "value": "map3.png"},
+     *   {"label": "Map4", "value": "map4.png"}
+     * ]```
      * @default null
      */
     values?: Array<{ label: string, value: string }>,
@@ -173,6 +222,17 @@ type param_image = param_common & {
  * It allows for configuring numeric inputs with options like sliders and value constraints.
  *
  * @shaderparam `uniform int`
+ *
+ * @example ```{
+ *   "type": "int",
+ *   "name": "my_int_value",
+ *   "label": "My int",
+ *   "slider": true,
+ *   "min": 0,
+ *   "max": 100,
+ *   "default": 50,
+ *   "step": 1
+ * }```
  */
 type param_int = param_common & {
     type: "int",
@@ -209,6 +269,17 @@ type param_int = param_common & {
  * This is typically used to change the behaviour of the effect and making it easier to understand for the end-user.
  *
  * @shaderparam `uniform int`
+ *
+ * @example ```{
+ *   "type": "list_int",
+ *   "name": "appear_mode",
+ *   "label": "Appear mode",
+ *   "values": [
+ *     {"label": "Previous scene over next", "value": 0},
+ *     {"label": "Next scene over previous", "value": 1}
+ *   ],
+ *   "default": 0
+ * }```
  */
 type param_list_int = param_common & {
     type: "list_int",
@@ -230,6 +301,12 @@ type param_list_int = param_common & {
  * Save the previous frame of a specific step as a parameter
  *
  * @shaderparam `uniform texture2d`
+ *
+ * @example ```{
+ *   "type": "param_prev_frame",
+ *   "name": "prev_frame",
+ *   "step": 1
+ * }```
  */
 type param_prev_frame = param_common & {
     type: "prev_frame",
@@ -249,6 +326,11 @@ type param_prev_frame = param_common & {
  * Video Source parameter
  *
  * @shaderparam `uniform texture2d`
+ *
+ * @example ```{
+ *   "type": "source",
+ *   "name": "my_source"
+ * }```
  */
 type param_source = param_common & {
     type: "source",
@@ -257,6 +339,11 @@ type param_source = param_common & {
  * Show some text in the properties UI
  *
  * @shaderparam none
+ *
+ * @example ```{
+ *   "type": "text",
+ *   "value": "This text will be shown in the properties UI"
+ * }```
  */
 type param_text = param_common & {
     type: "text",
@@ -268,6 +355,15 @@ type param_text = param_common & {
  * Also, the time can be reset to zero when the filter is toggled as visible
  *
  * @shaderparam `uniform float`
+ *
+ * @example ```{
+ *   "type": "param_time",
+ *   "name": "time",
+ *   "reset_on_show": "prompt",
+ *   "speed": {
+ *     "default": 0.1
+ *   }
+ * }```
  */
 type param_time = param_common & {
     type: "time",
