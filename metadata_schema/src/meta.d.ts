@@ -79,17 +79,17 @@ type param_color = param_common & {
  */
 type param_facetracking = param_common & {
     type: "facetracking",
-    /**
-     * Allow to chain the result of the face tracking to the next filter.
-     * If enabled, the face tracking algorithm will not be applied again on posterior filters. Instead, the result of
-     * this filter will be used.
-     *
-     * Enable this option only if you don't move the face in the scene with the effect.
-     * For example, the "Laser Eyes" effect uses this option, but the "Distort" effect doesn't.
-     *
-     * @defaut false
-     */
-    allow_chaining?: boolean,
+    // /**
+    //  * Allow to chain the result of the face tracking to the next filter.
+    //  * If enabled, the face tracking algorithm will not be applied again on posterior filters. Instead, the result of
+    //  * this filter will be used.
+    //  *
+    //  * Enable this option only if you don't move the face in the scene with the effect.
+    //  * For example, the "Laser Eyes" effect uses this option, but the "Distort" effect doesn't.
+    //  *
+    //  * @defaut false
+    //  */
+    // allow_chaining?: boolean,
 }
 
 /**
