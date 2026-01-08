@@ -339,7 +339,7 @@ type param_source = param_common & {
 /**
  * Show some text in the properties UI
  *
- * @shaderparam none
+ * No shader code associated.
  *
  * @example ```{
  *   "type": "text",
