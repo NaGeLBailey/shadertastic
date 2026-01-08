@@ -423,7 +423,11 @@ obs_properties_t *shadertastic_transition_properties(void *data) {
     }
     std::sort(sorted_effects.begin(), sorted_effects.end(),
         [](const auto& a, const auto& b) {
-            return a.second->label < b.second->label;
+            std::string left = a.second->label;
+            std::string right = b.second->label;
+            std::transform(left.begin(), left.end(), left.begin(), ::tolower);
+            std::transform(right.begin(), right.end(), right.begin(), ::tolower);
+            return left < right;
         }
     );
     for (const auto& [effect_name, effect] : sorted_effects) {
