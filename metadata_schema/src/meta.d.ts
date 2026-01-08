@@ -78,6 +78,7 @@ type param_bool = param_common & {
  *
  * @example ```{
  *   "type": "color",
+ *   "name": "my_color",
  *   "default": "#99ABCDEF"
  * }```
  */
