@@ -284,27 +284,27 @@ type param_time = param_common & {
     speed?: {
         /**
          * If true, the speed slider will be show in the effects properties
-         * @default: true
+         * @default true
          */
         show_ui?: boolean,
         /**
          * If show, name of the input in the properties UI
-         * @default: "Speed"
+         * @default "Speed"
          */
         label?: string,
         /**
          * Minimum allowed speed
-         * @default: 0.0
+         * @default 0.0
          */
         min?: number,
         /**
          * Maximum allowed speed
-         * @default: 1.0
+         * @default 1.0
          */
         max?: number,
         /**
          * Default value to use in a new filter
-         * @default: 1.0
+         * @default 1.0
          */
         default?: number,
     }
