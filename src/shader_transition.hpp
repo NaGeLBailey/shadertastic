@@ -161,6 +161,12 @@ static void shadertastic_transition_tick(void *data, float deltatime_seconds) {
         s->delta_time = deltatime_seconds;
         debug_trace("shadertastic_transition_tick %i", s->frame_index);
         s->frame_index++;
+
+        for (effect_parameter* param : s->selected_effect->effect_params) {
+            if (param) {
+                param->tick(s);
+            }
+        }
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
