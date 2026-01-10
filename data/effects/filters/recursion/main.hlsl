@@ -55,7 +55,13 @@ bool inside_box(float2 v, float2 left_top, float2 right_bottom) {
 float4 EffectLinear(float2 uv)
 {
     float2 uv2 = uv - float2(center_x, 1.0-center_y);
-    float zoom_ratio = 1.0 - ( pow(100, (clamp(zoom, 0.0, 1.0))) - 1 ) / (100 - 1);  // Log scale magique : (a^x - 1) / (a - 1)
+    float zoom_ratio;
+    if (zoom > 0.0) {
+        zoom_ratio = 1.0 - ( pow(100, zoom) - 1 ) / (100 - 1);  // Log scale magique : (a^x - 1) / (a - 1);
+    }
+    else {
+        zoom_ratio = 1.0 + ( pow(100, -zoom) - 1 ) / (100 - 1);  // Log scale magique : (a^x - 1) / (a - 1);
+    }
 
     if (current_step == 1) {
         float4 px_out = tex_interm.Sample(textureSampler, uv);
@@ -116,8 +122,9 @@ float4 EffectLinear(float2 uv)
         float4 px_small = image.Sample(textureSampler, uv2);
 
         float alpha = px[3];
-        alpha = max(alpha, (prev_px[3])*prev_alpha);
-        alpha = max(alpha, (px_small[3])*prev_alpha);
+        float prev_alpha_logscale = pow(prev_alpha, 0.1);
+        alpha = max(alpha, (prev_px[3])*prev_alpha_logscale);
+        alpha = max(alpha, (px_small[3])*prev_alpha_logscale);
         alpha = clamp(alpha, 0.0, 1.0);
 
         float4 px_out = float4(0.0, 0.0, 0.0, alpha);
