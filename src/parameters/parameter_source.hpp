@@ -158,7 +158,14 @@ class effect_parameter_source : public effect_parameter {
                 return;
             }
             gs_texture_t *texture = gs_texrender_get_texture(this->source_texrender);
-            try_gs_effect_set_texture(name.c_str(), shader_param, texture);
+
+            const bool linear_srgb = gs_get_linear_srgb();
+            if (linear_srgb) {
+                try_gs_effect_set_texture_srgb(name.c_str(), shader_param, texture);
+            }
+            else {
+                try_gs_effect_set_texture(name.c_str(), shader_param, texture);
+            }
         }
 
         void show() override {

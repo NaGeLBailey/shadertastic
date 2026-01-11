@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+- Video parameter: Fixed an incorrect brigthness due to sRGB conversion not done in filters
+
 ## [1.0.0] - 2026-01-10
 Happy New Year !
 This version brings a lot of improvements and rewrites!  
