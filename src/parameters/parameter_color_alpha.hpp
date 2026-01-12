@@ -23,10 +23,11 @@
 
 class effect_parameter_color_alpha : public effect_parameter {
     private:
-        int default_value = (int)0xFF000000;
+        uint32_t default_value = (uint32_t)0xFF000000;
+        vec4 selected_color{};
 
         // Function to convert an RGBA string to an integer
-        int rgbaStringToInt(std::string rgba) {
+        static int rgba_string_to_int(std::string rgba) {
             if (rgba.size() == 7) {
                 rgba = std::string("#FF"+rgba.substr(1));
             }
@@ -59,8 +60,8 @@ class effect_parameter_color_alpha : public effect_parameter {
         void initialize_params(const effect_shader *shader, obs_data_t *metadata, const std::string &effect_path) override {
             UNUSED_PARAMETER(shader);
             UNUSED_PARAMETER(effect_path);
-            obs_data_set_default_string(metadata, "default", "#000000FF");
-            default_value = rgbaStringToInt(std::string(obs_data_get_string(metadata, "default")));
+            obs_data_set_default_string(metadata, "default", "#FF000000");
+            default_value = rgba_string_to_int(std::string(obs_data_get_string(metadata, "default")));
         }
 
         void set_default(obs_data_t *settings, const char *full_param_name) override {
@@ -75,9 +76,15 @@ class effect_parameter_color_alpha : public effect_parameter {
         }
 
         void set_data_from_settings(obs_data_t *settings, const char *full_param_name) override {
-            //*((int*)this->data) = (int)obs_data_get_int(settings, full_param_name);
-            //debug("%s = %d", full_param_name, *((int*)this->data));
-            vec4_from_rgba((vec4*) this->data, (uint32_t)obs_data_get_int(settings, full_param_name));
+            vec4_from_rgba(&this->selected_color, (uint32_t)obs_data_get_int(settings, full_param_name));
+        }
+
+        void try_gs_set_val() override {
+            *((vec4*) this->data) = selected_color;
+            if (gs_get_color_space() != GS_CS_SRGB) {
+                gs_float3_srgb_nonlinear_to_linear((float*) this->data);
+            }
+            effect_parameter::try_gs_set_val();
         }
 };
 
