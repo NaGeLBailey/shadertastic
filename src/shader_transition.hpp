@@ -283,6 +283,11 @@ void shadertastic_transition_video_render(void *data, gs_effect_t *effect) {
         if (s->auto_reload && s->selected_effect != nullptr && shadertastic_settings().dev_mode_enabled) {
             debug("AUTO RELOAD");
             s->selected_effect->reload();
+            obs_data *settings = obs_source_get_settings(s->source);
+            for (auto *param: s->selected_effect->effect_params) {
+                std::string full_param_name = param->get_full_param_name(s->selected_effect->name);
+                param->set_data_from_settings(settings, full_param_name.c_str());
+            }
             obs_source_update(s->source, nullptr);
         }
 
