@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Fixed
 - Color parameter: Fixed inaccurate color due to sRGB (issue #16)
+- Transition: fixed incorrect alpha blending with partially transparent scenes  
+- Transition: fixed first frame glitching when a transition auto reloads in dev mode
 
 ## [1.0.1] - 2026-01-11
 ### Fixed

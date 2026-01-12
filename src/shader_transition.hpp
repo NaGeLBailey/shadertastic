@@ -252,11 +252,15 @@ void shadertastic_transition_shader_render(void *data, gs_texture_t *a, gs_textu
 
 //        if (s->frame_index == 0) {
 //            auto mat = extractImage(interm_texture);
-//            saveMat(mat, "/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/tex_interm.png");
+//            saveMat(mat, "/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/tex_interm0.png");
+//        }
+//        if (s->frame_index == 1) {
+//            auto mat = extractImage(interm_texture);
+//            saveMat(mat, "/home/olivier/obs-plugins/obs-shadertastic/plugin/lab/debug_images/tex_interm1.png");
 //        }
 
         if (render_ok) {
-            render_texture(interm_texture, false, false);
+            render_texture(interm_texture, false, true);
         }
 
         for (auto *prev_frame : effect->prev_frames_to_keep) {
