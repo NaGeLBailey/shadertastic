@@ -318,7 +318,6 @@ void shadertastic_filter_video_render(void *data, gs_effect_t *effect) {
     }
 
     gs_set_linear_srgb(prev_linear_srgb);
-
     gs_blend_state_pop();
 }
 //----------------------------------------------------------------------------------------------------------------------
