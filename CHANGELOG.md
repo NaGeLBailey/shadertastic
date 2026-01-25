@@ -5,14 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [1.0.2] - 2026-01-25
 ### Added
 - Added Sobel filter
+- Added some dev effects, for debugging (not in the release files)
 
 ### Changed
-- All the built-in transitions are now fully alpha-aware 
 - Burn transition: added smoothing effect
 
 ### Fixed
+- All the built-in transitions are now fully alpha-aware
 - Color parameter: Fixed inaccurate color due to sRGB (issue #16)
 - Transition: fixed incorrect alpha blending with partially transparent scenes  
 - Transition: fixed first frame glitching when a transition auto reloads in dev mode
