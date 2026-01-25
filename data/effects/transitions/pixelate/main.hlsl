@@ -65,11 +65,17 @@ float4 EffectLinear(float2 uv)
     px_b.g = lerp(px_b.g, 1.0, 0.1*(1-lerp_t));
     px_b.b = lerp(px_b.b, 1.0, 0.1*(1-lerp_t));
 
-    return lerp(
+    float4 px_out = lerp(
         px_a,
         px_b,
         lerp_t
     );
+    px_out.rgb = lerp(
+        px_a.rgb*px_a.a,
+        px_b.rgb*px_b.a,
+        lerp_t
+    ) / px_out.a;
+    return px_out;
 }
 //----------------------------------------------------------------------------------------------------------------------
 
