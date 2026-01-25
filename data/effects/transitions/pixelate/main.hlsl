@@ -1,5 +1,7 @@
 uniform float break_point;
 uniform float max_pixelation_level;
+uniform float center_x;
+uniform float center_y;
 //----------------------------------------------------------------------------------------------------------------------
 
 sampler_state textureSampler {
@@ -39,22 +41,22 @@ float sigmoid(float strength, float n) {
 
 float4 EffectLinear(float2 uv)
 {
-    float u = uv[0];
-    float v = uv[1];
-
     float size_ratio = (time < break_point) ? time / break_point : (1.0-time) / (1.0-break_point);
 
     float min_squares = 100.0 / max_pixelation_level;
 
-    //float u_width = 20.0 + (1.0/upixel - 20.0) * (1.0 - pow(size_ratio, 0.08));
     float u_width = min_squares + (1.0/upixel - min_squares) * (1.0 - pow(size_ratio, 0.05));
     float v_width = u_width / vpixel * upixel;
 
-    u = floor(u * u_width) / u_width + 0.5/u_width;
-    v = floor(v * v_width) / v_width + 0.5/v_width;
+    uv -= float2(center_x, center_y);
 
-    float4 px_a = tex_a.Sample(textureSampler, float2(u,v));
-    float4 px_b = tex_b.Sample(textureSampler, float2(u,v));
+    uv.x = (floor(uv.x * u_width) + 0.5) / u_width;
+    uv.y = (floor(uv.y * v_width) + 0.5) / v_width;
+
+    uv += float2(center_x, center_y);
+
+    float4 px_a = tex_a.Sample(textureSampler, uv);
+    float4 px_b = tex_b.Sample(textureSampler, uv);
 
     float lerp_t = sigmoid(30, (time+0.5-break_point));
 
